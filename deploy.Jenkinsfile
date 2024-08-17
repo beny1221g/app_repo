@@ -9,11 +9,12 @@ pipeline {
     }
 
     stages {
+
         stage('Download Artifacts') {
             steps {
-                copyArtifacts(projectName: 'app_build', filter: 'k8s/*.yaml', target: 'k8s')
-            }
-        }
+                copyArtifacts projectName: 'app_build', filter: 'k8s/*.yaml'
+                      }
+                                    }
 
         stage('Deploy to Kubernetes') {
             steps {
