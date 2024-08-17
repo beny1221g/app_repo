@@ -45,12 +45,12 @@ pipeline {
 
         stage('Port Forwarding') {
             steps {
-                script {
-                    echo "Attempting to port-forward"
-                    sh 'kubectl port-forward svc/nginx-service 8088:80 -n benyz'
-                }
-            }
-        }
+              script {
+              echo "Attempting to port-forward"
+              sh 'nohup kubectl port-forward svc/nginx-service 8088:8088 -n benyz &'
+             }
+             }
+}
     }
 
     post {
