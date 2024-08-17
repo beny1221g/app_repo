@@ -22,8 +22,9 @@ pipeline {
                     echo "Applying Kubernetes configurations"
 
                     // Apply deployments
-                    sh "kubectl set image deployment/app-deployment app=${PYTHON_IMAGE_NAME}:latest -n benyz"
-                    sh "kubectl set image deployment/nginx-deployment nginx=${NGINX_IMAGE_NAME}:latest -n benyz"
+                    sh "kubectl set image deployment/app-deployment app=${PYTHON_IMAGE_NAME}:${PYTHON_BUILD_NUMBER} -n benyz"
+                    sh "kubectl set image deployment/nginx-deployment nginx=${NGINX_IMAGE_NAME}:${NGINX_BUILD_NUMBER} -n benyz"
+
 
                     sh 'kubectl apply -f k8s/nginx-service.yaml -n benyz'
                     sh 'kubectl apply -f k8s/nginx-ingress.yaml -n benyz'
