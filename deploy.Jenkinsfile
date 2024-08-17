@@ -10,11 +10,11 @@ pipeline {
 
     stages {
 
-        stage('Download Artifacts') {
-            steps {
-                copyArtifacts projectName: 'app_build', filter: 'k8s/*.yaml'
-                      }
-                                    }
+//         stage('Download Artifacts') {
+//             steps {
+//                 copyArtifacts projectName: 'app_build', filter: 'k8s/*.yaml'
+//                       }
+//                                     }
 
         stage('Deploy to Kubernetes') {
             steps {
@@ -22,13 +22,13 @@ pipeline {
                     echo "Applying Kubernetes configurations"
 
                     // Apply deployments
-                    sh "kubectl set image deployment/app-deployment app=${PYTHON_IMAGE_NAME}:latest -n benyz"
-                    sh "kubectl set image deployment/nginx-deployment nginx=${NGINX_IMAGE_NAME}:latest -n benyz"
+//                     sh "kubectl set image deployment/app-deployment app=${PYTHON_IMAGE_NAME}:latest -n benyz"
+//                     sh "kubectl set image deployment/nginx-deployment nginx=${NGINX_IMAGE_NAME}:latest -n benyz"
 
                     sh 'kubectl apply -f k8s/nginx-service.yaml -n benyz'
                     sh 'kubectl apply -f k8s/nginx-ingress.yaml -n benyz'
 
-                    echo "Kubernetes configurations applied"
+                    echo "Kubernetes configurations applied "
                 }
             }
         }
