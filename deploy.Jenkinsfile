@@ -46,7 +46,7 @@ pipeline {
             steps {
                 script {
                     echo "Attempting to port-forward"
-                    sh 'kubectl port-forward svc/nginx-service 8088:80 -n benyz'
+                    sh 'kubectl port-forward svc/nginx-service 8088:8088 -n benyz'
                 }
             }
         }
