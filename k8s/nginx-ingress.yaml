@@ -16,4 +16,4 @@ spec:
           service:
             name: nginx-service
             port:
-              number: 8088
+              number: 5005
