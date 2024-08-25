@@ -17,4 +17,4 @@ spec:
       - name: nginx
         image: beny14/nginx_static:latest
         ports:
-        - containerPort: 80
+        - containerPort: 4000
