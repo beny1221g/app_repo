@@ -4,7 +4,7 @@ metadata:
   name: nginx-deployment
   namespace: {{ .Values.namespace }}
 spec:
-  replicas: {{ .Values.replicas }}
+  replicas: {{ .Values.nginx.replicas }}
   selector:
     matchLabels:
       app: nginx
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: {{ .Values.image }}
+        image: {{ .Values.nginx.image }}
         ports:
         - containerPort: 4000
         volumeMounts:

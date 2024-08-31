@@ -1,16 +1,13 @@
-apiVersion: keda.sh/v1alpha1
-kind: ScaledObject
+apiVersion: v1
+kind: Service
 metadata:
-  name: nginx-scaledobject
+  name: nginx-service
   namespace: {{ .Values.namespace }}
 spec:
-  scaleTargetRef:
-    kind: Deployment
-    name: nginx-deployment
-  minReplicaCount: {{ .Values.scaledobject.minReplicas }}
-  maxReplicaCount: {{ .Values.scaledobject.maxReplicas }}
-  triggers:
-  - type: cpu
-    metadata:
-      type: Utilization
-      value: "{{ .Values.scaledobject.cpuUtilization }}"
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 4000
+      targetPort: 4000
+  type: ClusterIP

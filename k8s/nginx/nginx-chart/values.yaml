@@ -1,19 +1,16 @@
 namespace: benyz
-replicas: 1
-image: beny14/nginx_static:latest
 
-hpa:
-  minReplicas: 1
-  maxReplicas: 5
-  targetCPUUtilizationPercentage: 50
+nginx:
+  replicas: 1
+  image: beny14/nginx_static:latest
+
+  hpa:
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 50
 
 ingress:
   host: localhost
 
 pvc:
   storage: 1Gi
-
-scaledobject:
-  minReplicas: 1
-  maxReplicas: 5
-  cpuUtilization: "50"
