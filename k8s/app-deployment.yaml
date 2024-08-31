@@ -4,7 +4,7 @@ metadata:
   name: app-deployment
   namespace: benyz
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: app
@@ -18,3 +18,29 @@ spec:
         image: beny14/python_app:latest
         ports:
         - containerPort: 5000
+        volumeMounts:
+        - name: app-storage
+          mountPath: /data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "500m"
+          limits:
+            memory: "512Mi"
+            cpu: "1"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 5000
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+      volumes:
+      - name: app-storage
+        persistentVolumeClaim:
+          claimName: app-pvc
