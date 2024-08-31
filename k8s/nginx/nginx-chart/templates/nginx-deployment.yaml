@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
-  namespace: benyz
+  namespace: {{ .Values.namespace }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
       app: nginx
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: beny14/nginx_static:latest
+        image: {{ .Values.image }}
         ports:
         - containerPort: 4000
         volumeMounts:

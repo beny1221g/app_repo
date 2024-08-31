@@ -1,16 +1,19 @@
-replicaCount: 1
+namespace: benyz
+replicas: 1
+image: beny14/nginx_static:latest
 
-image:
-  repository: nginx
-  tag: latest
-
-service:
-  type: ClusterIP
-  port: 4000
+hpa:
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 50
 
 ingress:
-  enabled: true
-  annotations: {}
-  hosts:
-    - host: nginx.local
-      paths: ["/"]
+  host: localhost
+
+pvc:
+  storage: 1Gi
+
+scaledobject:
+  minReplicas: 1
+  maxReplicas: 5
+  cpuUtilization: "50"
