@@ -1,10 +1,11 @@
+# app-chart/templates/app-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app-deployment
-  namespace: benyz
+  namespace: {{ .Values.namespace }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
       app: app
@@ -15,7 +16,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: beny14/python_app:latest
+        image: {{ .Values.image }}
         ports:
         - containerPort: 5000
         volumeMounts:
@@ -32,13 +33,13 @@ spec:
           httpGet:
             path: /health
             port: 5000
-          initialDelaySeconds: 60
+          initialDelaySeconds: 120
           timeoutSeconds: 5
         readinessProbe:
           httpGet:
             path: /readiness
             port: 5000
-          initialDelaySeconds: 60
+          initialDelaySeconds: 120
           timeoutSeconds: 5
       volumes:
       - name: app-storage

@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
-  namespace: benyz
+  namespace: {{ .Values.namespace }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
       app: nginx
@@ -15,32 +15,13 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: beny14/nginx_static:latest
+        image: {{ .Values.image }}
         ports:
         - containerPort: 4000
         volumeMounts:
-          - name: nginx-storage
-            mountPath: /usr/share/nginx/html
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "250m"
-          limits:
-            memory: "256Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 4000
-          initialDelaySeconds: 30
-          timeoutSeconds: 5
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: 4000
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
+        - mountPath: /usr/share/nginx/html
+          name: nginx-storage
       volumes:
-        - name: nginx-storage
-          persistentVolumeClaim:
-            claimName: nginx-pvc
+      - name: nginx-storage
+        persistentVolumeClaim:
+          claimName: nginx-pvc

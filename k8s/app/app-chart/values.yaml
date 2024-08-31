@@ -1,6 +1,6 @@
 namespace: benyz
 replicas: 1
-image: beny14/nginx_static:latest
+image: beny14/python_app:latest
 
 hpa:
   minReplicas: 1

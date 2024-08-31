@@ -1,11 +1,12 @@
+# app-chart/templates/app-ingress.yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: app-ingress
-  namespace: benyz
+  namespace: {{ .Values.namespace }}
 spec:
   rules:
-    - host: localhost
+    - host: {{ .Values.ingress.host }}
       http:
         paths:
           - path: /app

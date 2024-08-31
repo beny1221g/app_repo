@@ -1,13 +1,16 @@
-apiVersion: v1
-kind: Service
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
 metadata:
-  name: nginx-service
-  namespace: benyz
+  name: nginx-scaledobject
+  namespace: {{ .Values.namespace }}
 spec:
-  selector:
-    app: nginx
-  ports:
-  - protocol: TCP
-    port: 4000
-    targetPort: 4000
-  type: ClusterIP
+  scaleTargetRef:
+    kind: Deployment
+    name: nginx-deployment
+  minReplicaCount: {{ .Values.scaledobject.minReplicas }}
+  maxReplicaCount: {{ .Values.scaledobject.maxReplicas }}
+  triggers:
+  - type: cpu
+    metadata:
+      type: Utilization
+      value: "{{ .Values.scaledobject.cpuUtilization }}"

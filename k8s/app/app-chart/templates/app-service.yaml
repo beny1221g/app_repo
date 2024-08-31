@@ -1,8 +1,9 @@
+# app-chart/templates/app-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: app-service
-  namespace: benyz
+  namespace: {{ .Values.namespace }}
 spec:
   selector:
     app: app
