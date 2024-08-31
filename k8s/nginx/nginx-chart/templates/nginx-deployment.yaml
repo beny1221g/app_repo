@@ -4,7 +4,7 @@ metadata:
   name: nginx-deployment
   namespace: benyz
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: nginx
@@ -18,3 +18,10 @@ spec:
         image: beny14/nginx_static:latest
         ports:
         - containerPort: 4000
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html
+          name: nginx-storage
+      volumes:
+      - name: nginx-storage
+        persistentVolumeClaim:
+          claimName: nginx-pvc
