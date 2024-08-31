@@ -1,0 +1,16 @@
+replicaCount: 1
+
+image:
+  repository: nginx
+  tag: latest
+
+service:
+  type: ClusterIP
+  port: 4000
+
+ingress:
+  enabled: true
+  annotations: {}
+  hosts:
+    - host: nginx.local
+      paths: ["/"]

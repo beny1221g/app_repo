@@ -19,8 +19,8 @@ spec:
         ports:
         - containerPort: 4000
         volumeMounts:
-        - name: nginx-storage
-          mountPath: /usr/share/nginx/html
+          - name: nginx-storage
+            mountPath: /usr/share/nginx/html
         resources:
           requests:
             memory: "128Mi"
@@ -41,6 +41,6 @@ spec:
           initialDelaySeconds: 60
           timeoutSeconds: 5
       volumes:
-      - name: nginx-storage
-        persistentVolumeClaim:
-          claimName: nginx-pvc
+        - name: nginx-storage
+          persistentVolumeClaim:
+            claimName: nginx-pvc
