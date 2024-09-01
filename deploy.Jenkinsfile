@@ -1,20 +1,19 @@
 pipeline {
     agent {
-    kubernetes {
-      yaml '''
-        apiVersion: v1
-        kind: Pod
-        spec:
-          containers:
-          - name: jenkins-agent
-            image: jenkins-agent:latest
-            command:
-            - cat
-            tty: true
-        '''
+        kubernetes {
+            yaml '''
+            apiVersion: v1
+            kind: Pod
+            spec:
+                containers:
+                - name: jenkins-agent
+                  image: jenkins-agent:latest
+                  command:
+                  - cat
+                  tty: true
+            '''
+        }
     }
-  }
-
 
     parameters {
         string(name: 'PYTHON_IMAGE_NAME', defaultValue: 'beny14/python_app', description: 'Name of the Python Docker image')
@@ -36,34 +35,36 @@ pipeline {
                     echo "Applying Kubernetes configurations"
 
                     // Apply deployments
-                    sh "helm install app-release ./k8s/app/app-chart -n jenkis"
-                    sh "helm install nginx-release ./k8s/nginx/nginx-chart -n jenkis"
-
+                    sh "helm install app-release ./k8s/app/app-chart -n jenkins" // Adjust namespace if needed
+                    sh "helm install nginx-release ./k8s/nginx/nginx-chart -n jenkins" // Adjust namespace if needed
 
                     echo "Kubernetes configurations applied"
                 }
             }
         }
-//
-//         stage('Check Pod Status') {
-//             steps {
-//                 script {
-//                     echo "Checking pod status"
-//                     sh 'kubectl get pods -n jenkins'
-//                     sh 'kubectl describe pods -n jenkins'
-//                 }
-//             }
-//         }
 
-//         stage('Port Forwarding') {
-//             steps {
-//                 script {
-//                     echo "Attempting to port-forward"
-//                     sh 'kubectl port-forward svc/nginx-service 4000:4000 -n benyz'
-                    // kubectl port-forward pod/app-deployment-86b9fd7945-bvwc6 5000:5000 -n benyz
-//                 }
-//             }
-//         }
+        // Uncomment if needed for debugging
+        /*
+        stage('Check Pod Status') {
+            steps {
+                script {
+                    echo "Checking pod status"
+                    sh 'kubectl get pods -n jenkins' // Adjust namespace if needed
+                    sh 'kubectl describe pods -n jenkins' // Adjust namespace if needed
+                }
+            }
+        }
+
+        stage('Port Forwarding') {
+            steps {
+                script {
+                    echo "Attempting to port-forward"
+                    sh 'kubectl port-forward svc/nginx-service 4000:4000 -n jenkins' // Adjust namespace if needed
+                    // kubectl port-forward pod/app-deployment-86b9fd7945-bvwc6 5000:5000 -n jenkins // Adjust namespace if needed
+                }
+            }
+        }
+        */
     }
 
     post {
