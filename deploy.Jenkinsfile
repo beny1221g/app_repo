@@ -36,36 +36,34 @@ pipeline {
                     echo "Applying Kubernetes configurations"
 
                     // Apply deployments
-                    sh "kubectl set image deployment/app-deployment app=${PYTHON_IMAGE_NAME}:latest -n benyz"
-                    sh "kubectl set image deployment/nginx-deployment nginx=${NGINX_IMAGE_NAME}:latest -n benyz"
+                    sh "helm install app-release ./k8s/app/app-chart -n jenkis"
+                    sh "helm install nginx-release ./k8s/nginx/nginx-chart -n jenkis"
 
-                    sh 'kubectl apply -f k8s/nginx-service.yaml -n benyz'
-                    sh 'kubectl apply -f k8s/nginx-ingress.yaml -n benyz'
 
                     echo "Kubernetes configurations applied"
                 }
             }
         }
+//
+//         stage('Check Pod Status') {
+//             steps {
+//                 script {
+//                     echo "Checking pod status"
+//                     sh 'kubectl get pods -n jenkins'
+//                     sh 'kubectl describe pods -n jenkins'
+//                 }
+//             }
+//         }
 
-        stage('Check Pod Status') {
-            steps {
-                script {
-                    echo "Checking pod status"
-                    sh 'kubectl get pods -n benyz'
-                    sh 'kubectl describe pods -n benyz'
-                }
-            }
-        }
-
-        stage('Port Forwarding') {
-            steps {
-                script {
-                    echo "Attempting to port-forward"
-                    sh 'kubectl port-forward svc/nginx-service 4000:4000 -n benyz'
+//         stage('Port Forwarding') {
+//             steps {
+//                 script {
+//                     echo "Attempting to port-forward"
+//                     sh 'kubectl port-forward svc/nginx-service 4000:4000 -n benyz'
                     // kubectl port-forward pod/app-deployment-86b9fd7945-bvwc6 5000:5000 -n benyz
-                }
-            }
-        }
+//                 }
+//             }
+//         }
     }
 
     post {
