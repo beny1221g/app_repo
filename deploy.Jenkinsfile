@@ -1,17 +1,17 @@
 pipeline {
     agent {
         kubernetes {
-            inheritFrom 'app_deploy_32-t9vg' // Ensure this name matches the pod template defined in Jenkins
             yaml '''
             apiVersion: v1
             kind: Pod
             spec:
-                containers:
+              containers:
                 - name: jenkins-agent
-                  image: jenkins-agent:latest
+                  image: beny14/dockerfile_agent:latest
                   command:
-                  - cat
+                    - cat
                   tty: true
+              restartPolicy: Never
             '''
         }
     }
@@ -24,7 +24,6 @@ pipeline {
     }
 
     stages {
-
         stage('Deploy to Kubernetes') {
             steps {
                 script {
