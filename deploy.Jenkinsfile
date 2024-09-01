@@ -1,5 +1,20 @@
 pipeline {
-    agent any
+    agent {
+    kubernetes {
+      yaml '''
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+          - name: jenkins-agent
+            image: jenkins-agent:latest
+            command:
+            - cat
+            tty: true
+        '''
+    }
+  }
+
 
     parameters {
         string(name: 'PYTHON_IMAGE_NAME', defaultValue: 'beny14/python_app', description: 'Name of the Python Docker image')
