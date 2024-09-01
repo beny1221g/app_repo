@@ -1,8 +1,7 @@
 pipeline {
     agent {
-
         kubernetes {
-            label 'app_deploy_32-t9vg
+            label 'app_deploy_32-t9vg' // Ensure this label is properly configured in your Kubernetes pod template
             yaml '''
             apiVersion: v1
             kind: Pod
