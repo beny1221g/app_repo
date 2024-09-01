@@ -1,6 +1,8 @@
 pipeline {
     agent {
+
         kubernetes {
+            label 'app_deploy_32-t9vg
             yaml '''
             apiVersion: v1
             kind: Pod
