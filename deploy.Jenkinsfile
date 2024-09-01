@@ -16,18 +16,13 @@ pipeline {
     }
 
     parameters {
-        string(name: 'PYTHON_IMAGE_NAME', defaultValue: 'beny14/python_app', description: 'Name of the Python Docker image')
+        string(name: 'PYTHON_IMAGE_NAME', defaultValue: 'beny14/python_app:latest', description: 'Name of the Python Docker image')
         string(name: 'PYTHON_BUILD_NUMBER', defaultValue: '', description: 'Build number of the Python Docker image to deploy')
-        string(name: 'NGINX_IMAGE_NAME', defaultValue: 'beny14/nginx_static', description: 'Name of the Nginx Docker image')
+        string(name: 'NGINX_IMAGE_NAME', defaultValue: 'beny14/nginx_static:latest', description: 'Name of the Nginx Docker image')
         string(name: 'NGINX_BUILD_NUMBER', defaultValue: '', description: 'Build number of the Nginx Docker image to deploy')
     }
 
     stages {
-        stage('Download Artifacts') {
-            steps {
-                copyArtifacts(projectName: 'app_build', filter: 'k8s/*.yaml', target: 'k8s')
-            }
-        }
 
         stage('Deploy to Kubernetes') {
             steps {
