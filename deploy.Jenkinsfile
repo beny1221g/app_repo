@@ -8,7 +8,7 @@ pipeline {
             spec:
                 containers:
                 - name: jenkins-agent
-                  image: jenkins-agent:latest
+                  image: beny14/dockerfile_agent:latest
                   command:
                   - cat
                   tty: true
