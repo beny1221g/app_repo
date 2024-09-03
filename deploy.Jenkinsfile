@@ -29,9 +29,19 @@ pipeline {
                 script {
                     echo "Applying Kubernetes configurations"
 
-                    // Apply deployments
-                    sh "helm install app-release ./k8s/app/app-chart -n jenkins" // Adjust namespace if needed
-                    sh "helm install nginx-release ./k8s/nginx/nginx-chart -n jenkins" // Adjust namespace if needed
+                    // Ensure the namespace exists
+                    sh 'kubectl create namespace jenkins || true'
+
+                    // Apply Helm charts
+                    sh """
+                    helm upgrade --install app-release ./k8s/app/app-chart \
+                      --namespace jenkins \
+                      --set image.tag=${params.PYTHON_BUILD_NUMBER}
+
+                    helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
+                      --namespace jenkins \
+                      --set image.tag=${params.NGINX_BUILD_NUMBER}
+                    """
 
                     echo "Kubernetes configurations applied"
                 }
@@ -44,8 +54,8 @@ pipeline {
             steps {
                 script {
                     echo "Checking pod status"
-                    sh 'kubectl get pods -n jenkins' // Adjust namespace if needed
-                    sh 'kubectl describe pods -n jenkins' // Adjust namespace if needed
+                    sh 'kubectl get pods -n jenkins'
+                    sh 'kubectl describe pods -n jenkins'
                 }
             }
         }
@@ -54,8 +64,7 @@ pipeline {
             steps {
                 script {
                     echo "Attempting to port-forward"
-                    sh 'kubectl port-forward svc/nginx-service 4000:4000 -n jenkins' // Adjust namespace if needed
-                    // kubectl port-forward pod/app-deployment-86b9fd7945-bvwc6 5000:5000 -n jenkins // Adjust namespace if needed
+                    sh 'kubectl port-forward svc/nginx-service 4000:4000 -n jenkins'
                 }
             }
         }
