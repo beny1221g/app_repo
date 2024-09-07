@@ -17,7 +17,7 @@ spec:
       - name: jenkins
         image: jenkins/jenkins:latest
         ports:
-        - containerPort: 8080
+        - containerPort: 8081
         volumeMounts:
         - name: jenkins-data
           mountPath: /var/lib/jenkins
