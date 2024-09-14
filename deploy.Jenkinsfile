@@ -14,7 +14,7 @@ pipeline {
                   command:
                     - java
                     - -jar
-                    - /k8s/jenkins/agent.jar
+                    - /agent.jar
                     - -url
                     - http://10.100.105.105:8080/
                     - -secret
