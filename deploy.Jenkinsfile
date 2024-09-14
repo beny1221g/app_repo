@@ -28,7 +28,7 @@ pipeline {
     }
 
     options {
-        timeout(time: 10, unit: 'MINUTES') // Agent connection timeout
+        timeout(time: 10, unit: 'MINUTES') //   Agent connection timeout
     }
 
     parameters {
