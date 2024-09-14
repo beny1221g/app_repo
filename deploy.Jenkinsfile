@@ -16,11 +16,15 @@ pipeline {
         }
     }
 
+    options {
+        timeout(time: 10, unit: 'MINUTES') // Agent connection timeout
+    }
+
     parameters {
-        string(name: 'PYTHON_IMAGE_NAME', defaultValue: 'beny14/python_app:latest', description: 'Name of the Python Docker image')
-        string(name: 'PYTHON_BUILD_NUMBER', defaultValue: '', description: 'Build number of the Python Docker image to deploy')
-        string(name: 'NGINX_IMAGE_NAME', defaultValue: 'beny14/nginx_static:latest', description: 'Name of the Nginx Docker image')
-        string(name: 'NGINX_BUILD_NUMBER', defaultValue: '', description: 'Build number of the Nginx Docker image to deploy')
+        string(name: 'PYTHON_IMAGE_NAME', defaultValue: 'beny14/python_app:latest', description: 'Python Docker image name')
+        string(name: 'PYTHON_BUILD_NUMBER', defaultValue: '', description: 'Python Docker image build number')
+        string(name: 'NGINX_IMAGE_NAME', defaultValue: 'beny14/nginx_static:latest', description: 'Nginx Docker image name')
+        string(name: 'NGINX_BUILD_NUMBER', defaultValue: '', description: 'Nginx Docker image build number')
     }
 
     stages {
@@ -32,7 +36,7 @@ pipeline {
                     // Ensure the namespace exists
                     sh 'kubectl create namespace jenkins || true'
 
-                    // Apply Helm charts
+                    // Apply Helm charts with custom image tags
                     sh """
                     helm upgrade --install app-release ./k8s/app/app-chart \
                       --namespace jenkins \
@@ -48,7 +52,7 @@ pipeline {
             }
         }
 
-        // Uncomment if needed for debugging
+        // Optional debugging stages
         /*
         stage('Check Pod Status') {
             steps {
