@@ -11,9 +11,10 @@ spec:
       protocol: TCP
       port: 8080
       targetPort: 8080
+      nodePort: 30080  # Expose on a specific NodePort (external access)
     - name: jnlp
       protocol: TCP
       port: 50000
       targetPort: 50000
-  type: ClusterIP
-
+      nodePort: 30050  # Expose JNLP port on specific NodePort
+  type: NodePort
