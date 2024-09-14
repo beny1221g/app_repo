@@ -4,12 +4,23 @@ pipeline {
             yaml '''
             apiVersion: v1
             kind: Pod
+            metadata:
+              name: jenkins-agent
+              namespace: jenkins
             spec:
               containers:
                 - name: jenkins-agent
                   image: beny14/dockerfile_agent:latest
                   command:
-                    - cat
+                    - java
+                    - -jar
+                    - \k8s\jenkins\agent.jar
+                    - -url
+                    - http://10.100.105.105:8080/
+                    - -secret
+                    - ea1ec6413419076fbe9c88e36bce4519d02d29854741d6a0544c7b370bc428f5
+                    - -name
+                    - jenkins-agent
                   tty: true
               restartPolicy: Never
             '''
@@ -42,45 +53,4 @@ pipeline {
                       --namespace jenkins \
                       --set image.tag=${params.PYTHON_BUILD_NUMBER}
 
-                    helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
-                      --namespace jenkins \
-                      --set image.tag=${params.NGINX_BUILD_NUMBER}
-                    """
-
-                    echo "Kubernetes configurations applied"
-                }
-            }
-        }
-
-        // Optional debugging stages
-        /*
-        stage('Check Pod Status') {
-            steps {
-                script {
-                    echo "Checking pod status"
-                    sh 'kubectl get pods -n jenkins'
-                    sh 'kubectl describe pods -n jenkins'
-                }
-            }
-        }
-
-        stage('Port Forwarding') {
-            steps {
-                script {
-                    echo "Attempting to port-forward"
-                    sh 'kubectl port-forward svc/nginx-service 4000:4000 -n jenkins'
-                }
-            }
-        }
-        */
-    }
-
-    post {
-        always {
-            echo "Pipeline completed"
-        }
-        failure {
-            echo "Pipeline failed"
-        }
-    }
-}
+                    helm up
