@@ -17,7 +17,8 @@ spec:
       - name: jenkins
         image: jenkins/jenkins:latest
         ports:
-        - containerPort: 8081
+        - containerPort: 8080
+        - containerPort: 50000
         volumeMounts:
         - name: jenkins-data
           mountPath: /var/lib/jenkins
@@ -25,3 +26,5 @@ spec:
       - name: jenkins-data
         persistentVolumeClaim:
           claimName: jenkins-pvc
+
+
