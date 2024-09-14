@@ -17,7 +17,7 @@ pipeline {
                     - /usr/share/jenkins/agent.jar
                   args:
                     - -jnlpUrl
-                    - http://10.100.105.105:8080/computer/jenkins-agent/slave-agent.jnlp
+                    - http://10.100.105.105:30080/computer/jenkins-agent/slave-agent.jnlp
                     - -secret
                     - ea1ec6413419076fbe9c88e36bce4519d02d29854741d6a0544c7b370bc428f5
                     - -workDir
