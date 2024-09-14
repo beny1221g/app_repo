@@ -14,7 +14,7 @@ pipeline {
                   command:
                     - java
                     - -jar
-                    - \k8s\jenkins\agent.jar
+                    - /k8s/jenkins/agent.jar
                     - -url
                     - http://10.100.105.105:8080/
                     - -secret
@@ -28,7 +28,7 @@ pipeline {
     }
 
     options {
-        timeout(time: 10, unit: 'MINUTES') //   Agent connection timeout
+        timeout(time: 10, unit: 'MINUTES') // Agent connection timeout
     }
 
     parameters {
@@ -53,4 +53,45 @@ pipeline {
                       --namespace jenkins \
                       --set image.tag=${params.PYTHON_BUILD_NUMBER}
 
-                    helm up
+                    helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
+                      --namespace jenkins \
+                      --set image.tag=${params.NGINX_BUILD_NUMBER}
+                    """
+
+                    echo "Kubernetes configurations applied"
+                }
+            }
+        }
+
+        // Optional debugging stages
+        /*
+        stage('Check Pod Status') {
+            steps {
+                script {
+                    echo "Checking pod status"
+                    sh 'kubectl get pods -n jenkins'
+                    sh 'kubectl describe pods -n jenkins'
+                }
+            }
+        }
+
+        stage('Port Forwarding') {
+            steps {
+                script {
+                    echo "Attempting to port-forward"
+                    sh 'kubectl port-forward svc/nginx-service 4000:4000 -n jenkins'
+                }
+            }
+        }
+        */
+    }
+
+    post {
+        always {
+            echo "Pipeline completed"
+        }
+        failure {
+            echo "Pipeline failed"
+        }
+    }
+}
