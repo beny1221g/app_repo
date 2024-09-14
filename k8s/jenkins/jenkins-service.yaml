@@ -11,7 +11,7 @@ spec:
       protocol: TCP
       port: 8080
       targetPort: 8080
-      nodePort: 30080  # Exposes on a specific NodePort (external access)
+      nodePort: 30080  # Exps on a specific NodePort (external access)
     - name: jnlp
       protocol: TCP
       port: 50000
