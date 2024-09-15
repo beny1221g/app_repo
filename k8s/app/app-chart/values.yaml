@@ -12,7 +12,7 @@ app:
   ingress:
     host: app.local
   pvc:
-    storage: 1Gi  # Define this value
+    storage: 1Gi
   scaledobject:
     minReplicas: 1
     maxReplicas: 5
