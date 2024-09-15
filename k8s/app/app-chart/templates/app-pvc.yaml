@@ -1,25 +1,12 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
-  name: app-deployment
+  name: app-pvc
   namespace: {{ .Values.namespace }}
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: app
-  template:
-    metadata:
-      labels:
-        app: app
-    spec:
-      containers:
-        - name: app
-          image: {{ .Values.app.image }}
-          volumeMounts:
-            - name: app-storage
-              mountPath: /data  # Path inside the container
-      volumes:
-        - name: app-storage
-          persistentVolumeClaim:
-            claimName: app-pvc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.pvc.storage | default "1Gi" }}  # Ensure this value is set
+  storageClassName: standard

@@ -1,4 +1,4 @@
-apiVersion: autoscaling/v2beta2
+apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
   name: app-hpa
@@ -9,11 +9,5 @@ spec:
     kind: Deployment
     name: app-deployment
   minReplicas: {{ .Values.app.hpa.minReplicas | default 1 }}
-  maxReplicas: {{ .Values.app.hpa.maxReplicas | default 10 }}
-  metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: {{ .Values.app.hpa.targetCPUUtilizationPercentage | default 50 }}
+  maxReplicas: {{ .Values.app.hpa.maxReplicas | default 5 }}
+  targetCPUUtilizationPercentage: {{ .Values.app.hpa.targetCPUUtilizationPercentage | default 50 }}

@@ -1,11 +1,10 @@
-# app-chart/templates/app-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app-deployment
   namespace: {{ .Values.namespace }}
 spec:
-  replicas: {{ .Values.replicas }}
+  replicas: {{ .Values.app.replicas | default 1 }}
   selector:
     matchLabels:
       app: app
@@ -16,7 +15,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: {{ .Values.image }}
+        image: {{ .Values.app.image | default "beny14/python_app:latest" }}
         ports:
         - containerPort: 5000
         volumeMounts:
