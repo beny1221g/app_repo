@@ -1,5 +1,5 @@
+# For Nginx
 namespace: benyz
-
 nginx:
   replicas: 1
   image: beny14/nginx_static:latest
@@ -9,8 +9,8 @@ nginx:
     maxReplicas: 5
     targetCPUUtilizationPercentage: 50
 
-ingress:
-  host: localhost
+  ingress:
+    host: nginx.local  # Ensure this is set correctly
 
-pvc:
-  storage: 1Gi
+  pvc:
+    storage: 1Gi

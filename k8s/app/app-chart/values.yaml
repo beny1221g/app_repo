@@ -1,3 +1,5 @@
+
+# For App
 namespace: benyz
 replicas: 1
 image: beny14/python_app:latest
@@ -8,7 +10,7 @@ hpa:
   targetCPUUtilizationPercentage: 50
 
 ingress:
-  host: localhost
+  host: app.local  # Ensure this is set correctly
 
 pvc:
   storage: 1Gi

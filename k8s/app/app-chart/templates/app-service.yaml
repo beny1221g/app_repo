@@ -1,4 +1,3 @@
-# app-chart/templates/app-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -11,4 +10,5 @@ spec:
     - protocol: TCP
       port: 5000
       targetPort: 5000
-  type: ClusterIP
+      nodePort: {{ .Values.app.service.nodePort | default 30001 }}
+  type: NodePort

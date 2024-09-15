@@ -1,4 +1,3 @@
-# app-chart/templates/app-ingress.yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -6,7 +5,7 @@ metadata:
   namespace: {{ .Values.namespace }}
 spec:
   rules:
-    - host: {{ .Values.ingress.host }}
+    - host: {{ .Values.app.ingress.host }}
       http:
         paths:
           - path: /app
