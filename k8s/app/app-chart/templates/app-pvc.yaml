@@ -8,5 +8,5 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.pvc.storage }}
+      storage: {{ .Values.pvc.storage | default "1Gi" }}  # Default to 1Gi if not set
   storageClassName: standard

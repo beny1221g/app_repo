@@ -4,7 +4,7 @@ app:
   image: beny14/python_app:latest
   service:
     type: NodePort
-    nodePort: 30001  # Define this only if using NodePort
+    nodePort: 30001
   hpa:
     minReplicas: 1
     maxReplicas: 5
@@ -12,7 +12,7 @@ app:
   ingress:
     host: app.local
   pvc:
-    storage: 1Gi
+    storage: 1Gi  # Define this value
   scaledobject:
     minReplicas: 1
     maxReplicas: 5
