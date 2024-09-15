@@ -10,5 +10,7 @@ spec:
     - protocol: TCP
       port: 5000
       targetPort: 5000
+      {{- if .Values.app.service.nodePort }}
       nodePort: {{ .Values.app.service.nodePort | default 30001 }}
-  type: NodePort
+      {{- end }}
+  type: {{ .Values.app.service.type | default "ClusterIP" }}
