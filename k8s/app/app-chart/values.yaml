@@ -1,4 +1,4 @@
-namespace: default
+namespace: benyz
 pvc:
   storage: 1Gi
 app:

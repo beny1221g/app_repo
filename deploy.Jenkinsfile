@@ -19,7 +19,23 @@ pipeline {
                     - -jnlpUrl
                     - http://192.168.49.2:30080/computer/jenkins-agent/slave-agent.jnlp
                     - -secret
-                    - ea1ec6413419076fbe9c88e36bce4519d02d29854741d6a0544c7b370bc428f5
+                    - ${env.JENKINS_AGENT_SECRET} // Use an environment variable for the secret
+                    - -workDir
+                    - /home/jenkins/agent
+                  tty: true
+              restartPolicy: Never
+              containers:
+                - name: jenkins-agent
+                  image: beny14/dockerfile_agent:latest
+                  command:
+                    - java
+                    - -jar
+                    - /usr/share/jenkins/agent.jar
+                  args:
+                    - -jnlpUrl
+                    - http://192.168.49.2:30080/computer/jenkins-agent/slave-agent.jnlp
+                    - -secret
+                    - ${env.JENKINS_AGENT_SECRET} // Use an environment variable for the secret
                     - -workDir
                     - /home/jenkins/agent
                   tty: true
@@ -37,27 +53,45 @@ pipeline {
         string(name: 'PYTHON_BUILD_NUMBER', defaultValue: '', description: 'Python Docker image build number')
         string(name: 'NGINX_IMAGE_NAME', defaultValue: 'beny14/nginx_static:latest', description: 'Nginx Docker image name')
         string(name: 'NGINX_BUILD_NUMBER', defaultValue: '', description: 'Nginx Docker image build number')
+        string(name: 'JENKINS_AGENT_SECRET', defaultValue: '', description: 'Jenkins Agent Secret') // Add a parameter for the secret
     }
 
     stages {
+        stage('Setup') {
+            steps {
+                script {
+                    echo "Setting up namespace"
+
+                    // Ensure the namespace exists
+                    sh 'kubectl create namespace jenkins || true'
+                }
+            }
+        }
+
         stage('Deploy to Kubernetes') {
             steps {
                 script {
                     echo "Applying Kubernetes configurations"
 
-                    // Ensure the namespace exists
-                    sh 'kubectl create namespace jenkins || true'
+                    // Validate build numbers
+                    if (!params.PYTHON_BUILD_NUMBER?.trim() || !params.NGINX_BUILD_NUMBER?.trim()) {
+                        error("Build numbers for Python and Nginx cannot be empty")
+                    }
 
                     // Apply Helm charts with custom image tags
-                    sh """
-                    helm upgrade --install app-release ./k8s/app/app-chart \
-                      --namespace jenkins \
-                      --set image.tag=${params.PYTHON_BUILD_NUMBER}
+                    try {
+                        sh """
+                        helm upgrade --install app-release ./k8s/app/app-chart \
+                          --namespace jenkins \
+                          --set image.tag=${params.PYTHON_BUILD_NUMBER} || exit 1
 
-                    helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
-                      --namespace jenkins \
-                      --set image.tag=${params.NGINX_BUILD_NUMBER}
-                    """
+                        helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
+                          --namespace jenkins \
+                          --set image.tag=${params.NGINX_BUILD_NUMBER} || exit 1
+                        """
+                    } catch (Exception e) {
+                        error "Failed to deploy applications: ${e.message}"
+                    }
 
                     echo "Kubernetes configurations applied"
                 }
