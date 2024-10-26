@@ -33,7 +33,11 @@ pipeline {
     }
 
     parameters {
-        // Parameters remain unchanged
+        string(name: 'PYTHON_IMAGE_NAME', defaultValue: 'beny14/python_app:latest', description: 'Python Docker image name')
+        string(name: 'PYTHON_BUILD_NUMBER', defaultValue: '', description: 'Python Docker image build number')
+        string(name: 'NGINX_IMAGE_NAME', defaultValue: 'beny14/nginx_static:latest', description: 'Nginx Docker image name')
+        string(name: 'NGINX_BUILD_NUMBER', defaultValue: '', description: 'Nginx Docker image build number')
+        string(name: 'JENKINS_AGENT_SECRET', defaultValue: '', description: 'Jenkins Agent Secret') // Add a parameter for the secret
     }
 
     stages {
@@ -71,6 +75,7 @@ pipeline {
             }
         }
 
+        // Optional debugging stages can remain as commented out
     }
 
     post {
@@ -82,9 +87,6 @@ pipeline {
         }
     }
 }
-
-
-
 
 
 // pipeline {
