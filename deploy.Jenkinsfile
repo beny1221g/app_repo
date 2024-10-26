@@ -6,7 +6,7 @@ pipeline {
             kind: Pod
             metadata:
               name: jenkins-agent
-              namespace: bz-jenkins  # Ensure this matches the namespace throughout
+              namespace: bz-jenkins
             spec:
               containers:
                 - name: jenkins-agent
@@ -41,7 +41,7 @@ pipeline {
             steps {
                 script {
                     echo "Setting up namespace"
-                    sh 'kubectl create namespace bz-jenkins || true'  // Update namespace
+                    sh 'kubectl create namespace bz-jenkins || true'
                 }
             }
         }
@@ -54,14 +54,15 @@ pipeline {
                         error("Build numbers for Python and Nginx cannot be empty")
                     }
                     try {
-                        sh """
+                        sh '''
                         helm upgrade --install app-release ./k8s/app/app-chart \
-                          --namespace bz-jenkins \  // Update namespace
+                          --namespace bz-jenkins \
                           --set image.tag=${params.PYTHON_BUILD_NUMBER} || exit 1
+
                         helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
-                          --namespace bz-jenkins \  // Update namespace
+                          --namespace bz-jenkins \
                           --set image.tag=${params.NGINX_BUILD_NUMBER} || exit 1
-                        """
+                        '''
                     } catch (Exception e) {
                         error "Failed to deploy applications: ${e.message}"
                     }
@@ -70,7 +71,6 @@ pipeline {
             }
         }
 
-        // Optional debugging stages can remain as commented out
     }
 
     post {
@@ -82,41 +82,6 @@ pipeline {
         }
     }
 }
-
-        // Optional debugging stages
-        /*
-        stage('Check Pod Status') {
-            steps {
-                script {
-                    echo "Checking pod status"
-                    sh 'kubectl get pods -n jenkins'
-                    sh 'kubectl describe pods -n jenkins'
-                }
-            }
-        }
-
-        stage('Port Forwarding') {
-            steps {
-                script {
-                    echo "Attempting to port-forward"
-                    sh 'kubectl port-forward svc/nginx-service 4000:4000 -n jenkins'
-                }
-            }
-        }
-        */
-    }
-
-    post {
-        always {
-            echo "Pipeline completed"
-        }
-        failure {
-            echo "Pipeline failed"
-        }
-    }
-}
-
-
 
 
 
