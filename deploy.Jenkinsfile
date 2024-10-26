@@ -19,7 +19,7 @@ pipeline {
                     - -jnlpUrl
                     - http://k8s-bzjenkin-releasej-c663409355-6f66daf7dc73980b.elb.us-east-2.amazonaws.com:8080/computer/jenkins-agent/slave-agent.jnlp
                     - -secret
-                    - ${env.JENKINS_AGENT_SECRET} // Ensure this is set properly
+                    - ${env.JENKINS_AGENT_SECRET}
                     - -workDir
                     - /home/jenkins/agent
                   tty: true
@@ -29,15 +29,15 @@ pipeline {
     }
 
     options {
-        timeout(time: 5, unit: 'MINUTES') // Increase if necessary
+        timeout(time: 5, unit: 'MINUTES')
     }
 
     parameters {
         string(name: 'PYTHON_IMAGE_NAME', defaultValue: 'beny14/python_app:latest', description: 'Python Docker image name')
-        string(name: 'PYTHON_BUILD_NUMBER', defaultValue: '', description: 'Python Docker image build number')
+        string(name: 'PYTHON_BUILD_NUMBER', defaultValue: 'latest', description: 'Python Docker image build number')
         string(name: 'NGINX_IMAGE_NAME', defaultValue: 'beny14/nginx_static:latest', description: 'Nginx Docker image name')
-        string(name: 'NGINX_BUILD_NUMBER', defaultValue: '', description: 'Nginx Docker image build number')
-        string(name: 'JENKINS_AGENT_SECRET', defaultValue: '', description: 'Jenkins Agent Secret') // Add a parameter for the secret
+        string(name: 'NGINX_BUILD_NUMBER', defaultValue: 'latest', description: 'Nginx Docker image build number')
+        string(name: 'JENKINS_AGENT_SECRET', defaultValue: '', description: 'Jenkins Agent Secret')
     }
 
     stages {
@@ -57,7 +57,6 @@ pipeline {
                     else
                         echo "kubectl is already installed"
                     fi
-
                     '''
                 }
             }
@@ -71,7 +70,7 @@ pipeline {
                         error("Build numbers for Python and Nginx cannot be empty")
                     }
                     try {
-                        sh '''
+                        sh """
                         helm upgrade --install app-release ./k8s/app/app-chart \
                           --namespace bz-jenkins \
                           --set image.tag=${params.PYTHON_BUILD_NUMBER} || exit 1
@@ -79,7 +78,7 @@ pipeline {
                         helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
                           --namespace bz-jenkins \
                           --set image.tag=${params.NGINX_BUILD_NUMBER} || exit 1
-                        '''
+                        """
                     } catch (Exception e) {
                         error "Failed to deploy applications: ${e.message}"
                     }
@@ -107,6 +106,7 @@ pipeline {
         }
     }
 }
+
 
 
 
