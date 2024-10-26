@@ -86,11 +86,11 @@ pipeline {
                     try {
                         sh '''
                         helm upgrade --install app-release ./k8s/app/app-chart \
-                          --namespace bz-jenkins \
+                          --namespace bz-pollyapp \
                           --set image.tag=latest || exit 1
 
                         helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
-                          --namespace bz-jenkins \
+                          --namespace bz-pollyapp \
                           --set image.tag=latest || exit 1
                         '''
                     } catch (Exception e) {
@@ -101,14 +101,6 @@ pipeline {
             }
         }
 
-        stage('Port Forwarding') {
-            steps {
-                script {
-                    echo "Attempting to port-forward"
-                    sh 'kubectl port-forward svc/nginx-service 4000:4000 -n bz-jenkins'
-                }
-            }
-        }
     }
 
     post {
