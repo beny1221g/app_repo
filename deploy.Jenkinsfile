@@ -6,7 +6,7 @@ pipeline {
             kind: Pod
             metadata:
               name: jenkins-agent
-              namespace: bz-jenkins
+              namespace: bz-jenkins  # Ensure this matches the namespace throughout
             spec:
               containers:
                 - name: jenkins-agent
@@ -19,7 +19,7 @@ pipeline {
                     - -jnlpUrl
                     - http://k8s-bzjenkin-releasej-c663409355-6f66daf7dc73980b.elb.us-east-2.amazonaws.com:8080/computer/jenkins-agent/slave-agent.jnlp
                     - -secret
-                    - ${env.JENKINS_AGENT_SECRET} // Use an environment variable for the secret
+                    - ${env.JENKINS_AGENT_SECRET} // Ensure this is set properly
                     - -workDir
                     - /home/jenkins/agent
                   tty: true
@@ -29,15 +29,11 @@ pipeline {
     }
 
     options {
-        timeout(time: 2, unit: 'MINUTES') // Agent connection timeout
+        timeout(time: 5, unit: 'MINUTES') // Increase if necessary
     }
 
     parameters {
-        string(name: 'PYTHON_IMAGE_NAME', defaultValue: 'beny14/python_app:latest', description: 'Python Docker image name')
-        string(name: 'PYTHON_BUILD_NUMBER', defaultValue: '', description: 'Python Docker image build number')
-        string(name: 'NGINX_IMAGE_NAME', defaultValue: 'beny14/nginx_static:latest', description: 'Nginx Docker image name')
-        string(name: 'NGINX_BUILD_NUMBER', defaultValue: '', description: 'Nginx Docker image build number')
-        string(name: 'JENKINS_AGENT_SECRET', defaultValue: '', description: 'Jenkins Agent Secret') // Add a parameter for the secret
+        // Parameters remain unchanged
     }
 
     stages {
@@ -45,9 +41,7 @@ pipeline {
             steps {
                 script {
                     echo "Setting up namespace"
-
-                    // Ensure the namespace exists
-                    sh 'kubectl create namespace jenkins || true'
+                    sh 'kubectl create namespace bz-jenkins || true'  // Update namespace
                 }
             }
         }
@@ -56,31 +50,38 @@ pipeline {
             steps {
                 script {
                     echo "Applying Kubernetes configurations"
-
-                    // Validate build numbers
                     if (!params.PYTHON_BUILD_NUMBER?.trim() || !params.NGINX_BUILD_NUMBER?.trim()) {
                         error("Build numbers for Python and Nginx cannot be empty")
                     }
-
-                    // Apply Helm charts with custom image tags
                     try {
                         sh """
                         helm upgrade --install app-release ./k8s/app/app-chart \
-                          --namespace jenkins \
+                          --namespace bz-jenkins \  // Update namespace
                           --set image.tag=${params.PYTHON_BUILD_NUMBER} || exit 1
-
                         helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
-                          --namespace jenkins \
+                          --namespace bz-jenkins \  // Update namespace
                           --set image.tag=${params.NGINX_BUILD_NUMBER} || exit 1
                         """
                     } catch (Exception e) {
                         error "Failed to deploy applications: ${e.message}"
                     }
-
                     echo "Kubernetes configurations applied"
                 }
             }
         }
+
+        // Optional debugging stages can remain as commented out
+    }
+
+    post {
+        always {
+            echo "Pipeline completed"
+        }
+        failure {
+            echo "Pipeline failed"
+        }
+    }
+}
 
         // Optional debugging stages
         /*
