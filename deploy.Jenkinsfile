@@ -60,7 +60,11 @@ pipeline {
                     # Check and install helm if needed
                     if ! command -v helm &> /dev/null; then
                         echo "helm not found, installing..."
-                        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+                        curl -LO https://get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz && \
+                        tar -zxvf helm-v3.12.0-linux-amd64.tar.gz && \
+                        mv linux-amd64/helm /home/jenkins/helm && \
+                        chmod +x /home/jenkins/helm && \
+                        export PATH=$PATH:/home/jenkins
                     else
                         echo "helm is already installed"
                     fi
