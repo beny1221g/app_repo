@@ -86,11 +86,11 @@ pipeline {
                     try {
                         sh '''
                         helm upgrade --install app-release ./k8s/app/app-chart \
-                          --namespace bz-pollyapp
+                          --namespace bz-appy
                            || exit 1
 
                         helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
-                          --namespace bz-pollyapp
+                          --namespace bz-appy
                            || exit 1
                         '''
                     } catch (Exception e) {
