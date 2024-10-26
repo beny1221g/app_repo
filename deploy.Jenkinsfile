@@ -6,7 +6,7 @@ pipeline {
             kind: Pod
             metadata:
               name: jenkins-agent
-              namespace: jenkins
+              namespace: bz-jenkins
             spec:
               containers:
                 - name: jenkins-agent
@@ -45,6 +45,7 @@ pipeline {
             steps {
                 script {
                     echo "Setting up namespace"
+
                     // Ensure the namespace exists
                     sh 'kubectl create namespace jenkins || true'
                 }
@@ -55,6 +56,7 @@ pipeline {
             steps {
                 script {
                     echo "Applying Kubernetes configurations"
+
                     // Validate build numbers
                     if (!params.PYTHON_BUILD_NUMBER?.trim() || !params.NGINX_BUILD_NUMBER?.trim()) {
                         error("Build numbers for Python and Nginx cannot be empty")
@@ -74,10 +76,33 @@ pipeline {
                     } catch (Exception e) {
                         error "Failed to deploy applications: ${e.message}"
                     }
+
                     echo "Kubernetes configurations applied"
                 }
             }
         }
+
+        // Optional debugging stages
+        /*
+        stage('Check Pod Status') {
+            steps {
+                script {
+                    echo "Checking pod status"
+                    sh 'kubectl get pods -n jenkins'
+                    sh 'kubectl describe pods -n jenkins'
+                }
+            }
+        }
+
+        stage('Port Forwarding') {
+            steps {
+                script {
+                    echo "Attempting to port-forward"
+                    sh 'kubectl port-forward svc/nginx-service 4000:4000 -n jenkins'
+                }
+            }
+        }
+        */
     }
 
     post {
@@ -89,7 +114,6 @@ pipeline {
         }
     }
 }
-
 
 
 
