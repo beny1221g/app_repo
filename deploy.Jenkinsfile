@@ -44,8 +44,21 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
-                    echo "Setting up namespace"
-                    sh 'kubectl create namespace bz-jenkins || true'
+                    echo "Setting up namespace and ensuring kubectl is installed"
+
+                    // Check if kubectl is installed; if not, download and install it
+                    sh '''
+                    if ! command -v kubectl &> /dev/null; then
+                        echo "kubectl not found, installing..."
+                        curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && \
+                        chmod +x ./kubectl && \
+                        mv ./kubectl /usr/local/bin/kubectl
+                    else
+                        echo "kubectl is already installed"
+                    fi
+
+                    kubectl create namespace bz-jenkins || true
+                    '''
                 }
             }
         }
@@ -75,7 +88,14 @@ pipeline {
             }
         }
 
-        // Optional debugging stages can remain as commented out
+        stage('Port Forwarding') {
+            steps {
+                script {
+                    echo "Attempting to port-forward"
+                    sh 'kubectl port-forward svc/nginx-service 4000:4000 -n bz-jenkins'
+                }
+            }
+        }
     }
 
     post {
@@ -87,6 +107,7 @@ pipeline {
         }
     }
 }
+
 
 
 // pipeline {
