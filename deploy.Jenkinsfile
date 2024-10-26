@@ -86,12 +86,12 @@ pipeline {
                     try {
                         sh '''
                         helm upgrade --install app-release ./k8s/app/app-chart \
-                          --namespace bz-pollyapp \
-                          --set image.tag=latest || exit 1
+                          --namespace bz-pollyapp
+                           || exit 1
 
                         helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
-                          --namespace bz-pollyapp \
-                          --set image.tag=latest || exit 1
+                          --namespace bz-pollyapp
+                           || exit 1
                         '''
                     } catch (Exception e) {
                         error "Failed to deploy applications: ${e.message}"
