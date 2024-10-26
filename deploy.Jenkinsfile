@@ -42,10 +42,11 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
-                    echo "Setting up namespace and ensuring kubectl is installed"
+                    echo "Setting up namespace and ensuring kubectl and helm are installed"
 
-                    // Check if kubectl is installed; if not, download and install it
+                    // Check if kubectl and helm are installed; if not, download and install them
                     sh '''
+                    # Check and install kubectl if needed
                     if ! command -v kubectl &> /dev/null; then
                         echo "kubectl not found, installing..."
                         curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && \
@@ -54,6 +55,14 @@ pipeline {
                         export PATH=$PATH:/home/jenkins
                     else
                         echo "kubectl is already installed"
+                    fi
+
+                    # Check and install helm if needed
+                    if ! command -v helm &> /dev/null; then
+                        echo "helm not found, installing..."
+                        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+                    else
+                        echo "helm is already installed"
                     fi
                     '''
                 }
