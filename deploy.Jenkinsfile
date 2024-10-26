@@ -34,9 +34,7 @@ pipeline {
 
     parameters {
         string(name: 'PYTHON_IMAGE_NAME', defaultValue: 'beny14/python_app:latest', description: 'Python Docker image name')
-        string(name: 'PYTHON_BUILD_NUMBER', defaultValue: 'latest', description: 'Python Docker image build number')
         string(name: 'NGINX_IMAGE_NAME', defaultValue: 'beny14/nginx_static:latest', description: 'Nginx Docker image name')
-        string(name: 'NGINX_BUILD_NUMBER', defaultValue: 'latest', description: 'Nginx Docker image build number')
         string(name: 'JENKINS_AGENT_SECRET', defaultValue: '', description: 'Jenkins Agent Secret')
     }
 
@@ -65,20 +63,18 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    echo "Applying Kubernetes configurations"
-                    if (!params.PYTHON_BUILD_NUMBER?.trim() || !params.NGINX_BUILD_NUMBER?.trim()) {
-                        error("Build numbers for Python and Nginx cannot be empty")
-                    }
+                    echo "Applying Kubernetes configurations with default tag 'latest'"
+
                     try {
-                        sh """
+                        sh '''
                         helm upgrade --install app-release ./k8s/app/app-chart \
                           --namespace bz-jenkins \
-                          --set image.tag=${params.PYTHON_BUILD_NUMBER} || exit 1
+                          --set image.tag=latest || exit 1
 
                         helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
                           --namespace bz-jenkins \
-                          --set image.tag=${params.NGINX_BUILD_NUMBER} || exit 1
-                        """
+                          --set image.tag=latest || exit 1
+                        '''
                     } catch (Exception e) {
                         error "Failed to deploy applications: ${e.message}"
                     }
@@ -106,8 +102,6 @@ pipeline {
         }
     }
 }
-
-
 
 
 // pipeline {
