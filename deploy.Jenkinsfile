@@ -58,7 +58,6 @@ pipeline {
                         echo "kubectl is already installed"
                     fi
 
-                    kubectl create namespace bz-jenkins || true
                     '''
                 }
             }
