@@ -38,21 +38,27 @@ pipeline {
         string(name: 'JENKINS_AGENT_SECRET', defaultValue: '', description: 'Jenkins Agent Secret')
     }
 
+    environment {
+        PATH = "/home/jenkins/bin:$PATH"
+    }
+
     stages {
         stage('Setup') {
             steps {
                 script {
                     echo "Setting up namespace and ensuring kubectl and helm are installed"
 
-                    // Check if kubectl and helm are installed; if not, download and install them
+                    // Create /home/jenkins/bin and add it to the PATH
                     sh '''
+                    mkdir -p /home/jenkins/bin
+                    export PATH=/home/jenkins/bin:$PATH
+
                     # Check and install kubectl if needed
                     if ! command -v kubectl &> /dev/null; then
                         echo "kubectl not found, installing..."
                         curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && \
                         chmod +x ./kubectl && \
-                        mv ./kubectl /home/jenkins/kubectl && \
-                        export PATH=$PATH:/home/jenkins
+                        mv ./kubectl /home/jenkins/bin/
                     else
                         echo "kubectl is already installed"
                     fi
@@ -62,9 +68,8 @@ pipeline {
                         echo "helm not found, installing..."
                         curl -LO https://get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz && \
                         tar -zxvf helm-v3.12.0-linux-amd64.tar.gz && \
-                        mv linux-amd64/helm /home/jenkins/helm && \
-                        chmod +x /home/jenkins/helm && \
-                        export PATH=$PATH:/home/jenkins
+                        mv linux-amd64/helm /home/jenkins/bin/ && \
+                        chmod +x /home/jenkins/bin/helm
                     else
                         echo "helm is already installed"
                     fi
