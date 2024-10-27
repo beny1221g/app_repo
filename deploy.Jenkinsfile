@@ -56,7 +56,11 @@ pipeline {
                     sh '''
                     if ! command -v helm &> /dev/null; then
                         echo "Installing Helm"
-                        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+                        curl -LO https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz && \
+                        tar -zxvf helm-v3.9.0-linux-amd64.tar.gz && \
+                        mv linux-amd64/helm /home/jenkins/helm && \
+                        chmod +x /home/jenkins/helm
+                        export PATH=$PATH:/home/jenkins
                     fi
                     '''
                 }
@@ -70,7 +74,7 @@ pipeline {
 
                     // Deploy the Nginx chart, assuming values.yaml is set up correctly
                     sh '''
-                    helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
+                    /home/jenkins/helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
                       --namespace benyz \
                       --set nginx.image=beny14/nginx_static \
                       --set nginx.replicas=1
@@ -98,7 +102,6 @@ pipeline {
         }
     }
 }
-
 
 
 // pipeline {
