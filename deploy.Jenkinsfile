@@ -104,19 +104,20 @@ pipeline {
 
         stage('AWS Configure') {
             steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
                     accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                     secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                    credentialsId: 'aws'
-                ]]) {
+                    credentialsId: 'aws']]) {
+
                     script {
                         // Configure AWS CLI with the provided credentials and region
-                        sh """
-                            aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-                            aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
-                            aws configure set region ${aws_region}
-                        """
+                        container('install-tools') { // Ensure commands run in the context where AWS CLI is installed
+                            sh """
+                                aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+                                aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+                                aws configure set region ${aws_region}
+                            """
+                        }
                     }
                 }
             }
@@ -141,10 +142,12 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    sh """
-                        export HELM_DRIVER=configmap
-                        helm install nginx-chart ${env.helm_chart_path} -n ${namespace} --kubeconfig ${kubeconfig_path}
-                    """
+                    container('install-tools') { // Ensure commands run in the context where Helm is installed
+                        sh """
+                            export HELM_DRIVER=configmap
+                            helm install nginx-chart ${env.helm_chart_path} -n ${namespace} --kubeconfig ${kubeconfig_path}
+                        """
+                    }
                 }
             }
         }
@@ -163,11 +166,21 @@ pipeline {
 }
 
 def sendSNSNotification(status, message) {
-    sh """
-        aws sns publish \
-            --region ${env.aws_region} \
-            --topic-arn ${env.sns_topic_arn} \
-            --message "Deployment Status: ${status}\\nMessage: ${message}" \
-            --subject "Deployment ${status}: ${env.deployment_name}"
-    """
+    script {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+            credentialsId: 'aws']]) {
+
+            container('install-tools') { // Ensure commands run in the context where AWS CLI is installed
+                sh """
+                    aws sns publish \
+                        --region ${env.aws_region} \
+                        --topic-arn ${env.sns_topic_arn} \
+                        --message "Deployment Status: ${status}\\nMessage: ${message}" \
+                        --subject "Deployment ${status}: ${env.deployment_name}"
+                """
+            }
+        }
+    }
 }
