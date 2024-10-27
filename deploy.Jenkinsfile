@@ -8,6 +8,13 @@ pipeline {
           name: jenkins-agent
           namespace: bz-jenkins
         spec:
+          initContainers:
+            - name: init-permissions
+              image: busybox
+              command: ['sh', '-c', 'chmod -R 777 /home/jenkins/agent']
+              volumeMounts:
+                - name: jenkins-home
+                  mountPath: /home/jenkins/agent
           containers:
             - name: jenkins-agent
               image: beny14/dockerfile_agent:latest
@@ -26,8 +33,11 @@ pipeline {
                 - /home/jenkins/agent
               tty: true
               securityContext:
-                runAsUser: 0
-                fsGroup: 0
+                runAsUser: 1000
+                fsGroup: 1000
+          volumes:
+            - name: jenkins-home
+              emptyDir: {}
           restartPolicy: Never
         '''
     }
