@@ -1,35 +1,39 @@
 pipeline {
     agent {
-        kubernetes {
-            yaml '''
-            apiVersion: v1
-            kind: Pod
-            metadata:
-              name: jenkins-agent
-              namespace: bz-jenkins
-            spec:
-              containers:
-                - name: jenkins-agent
-                  image: beny14/dockerfile_agent:latest
-                  command:
-                    - java
-                    - -jar
-                    - /usr/share/jenkins/agent.jar
-                  args:
-                    - -jnlpUrl
-                    - http://k8s-bzjenkin-releasej-c663409355-6f66daf7dc73980b.elb.us-east-2.amazonaws.com:8080/computer/jenkins-agent/slave-agent.jnlp
-                    - -secret
-                    - ${env.JENKINS_AGENT_SECRET}
-                    - -workDir
-                    - /home/jenkins/agent
-                  tty: true
-                  securityContext:
-                    runAsUser: 0
-                    allowPrivilegeEscalation: true
-              restartPolicy: Never
-            '''
-        }
+       kubernetes {
+        yaml '''
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: jenkins-agent
+          namespace: bz-jenkins
+        spec:
+          containers:
+            - name: jenkins-agent
+              image: beny14/dockerfile_agent:latest
+              command:
+                - java
+                - -jar
+                - /usr/share/jenkins/agent.jar
+              args:
+                - -url
+                - http://k8s-bzjenkin-releasej-c663409355-6f66daf7dc73980b.elb.us-east-2.amazonaws.com:8080
+                - -name
+                - jenkins-agent
+                - -secret
+                - ${env.JENKINS_AGENT_SECRET}
+                - -workDir
+                - /home/jenkins/agent
+              tty: true
+              securityContext:
+                runAsUser: 0
+                fsGroup: 0
+          restartPolicy: Never
+        '''
     }
+}
+
+
 
     options {
         timeout(time: 5, unit: 'MINUTES')
