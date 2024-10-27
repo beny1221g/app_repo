@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: nginx-pvc
-  namespace: {{ .Values.namespace }}
+  namespace: bz-appy
 spec:
   accessModes:
     - ReadWriteOnce

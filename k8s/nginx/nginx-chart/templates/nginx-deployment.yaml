@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
-  namespace: {{ .Values.namespace }}
+  namespace: bz-appy
 spec:
   replicas: {{ .Values.nginx.replicas }}
   selector:
