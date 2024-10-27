@@ -1,31 +1,30 @@
 pipeline {
     agent {
         kubernetes {
-        yaml '''
-        apiVersion: v1
-        kind: Pod
-        metadata:
-          name: jenkins-agent
-          namespace: bz-jenkins
-        spec:
-          containers:
-            - name: jenkins-agent
-              image: your_docker_registry/jenkins-custom-agent:latest
-              command:
-                - java
-                - -jar
-                - /usr/share/jenkins/agent.jar
-              args:
-                - -jnlpUrl
-                - http://k8s-bzjenkin-releasej-c663409355-6f66daf7dc73980b.elb.us-east-2.amazonaws.com:8080/computer/jenkins-agent/slave-agent.jnlp
-                - -secret
-                - ${env.JENKINS_AGENT_SECRET}
-                - -workDir
-                - /home/jenkins/agent
-              tty: true
-          restartPolicy: Never
-        '''
-
+            yaml '''
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              name: jenkins-agent
+              namespace: bz-jenkins
+            spec:
+              containers:
+                - name: jenkins-agent
+                  image: beny14/dockerfile_agent:latest
+                  command:
+                    - java
+                    - -jar
+                    - /usr/share/jenkins/agent.jar
+                  args:
+                    - -jnlpUrl
+                    - http://k8s-bzjenkin-releasej-c663409355-6f66daf7dc73980b.elb.us-east-2.amazonaws.com:8080/computer/jenkins-agent/slave-agent.jnlp
+                    - -secret
+                    - ${env.JENKINS_AGENT_SECRET}
+                    - -workDir
+                    - /home/jenkins/agent
+                  tty: true
+              restartPolicy: Never
+            '''
         }
     }
 
@@ -55,28 +54,10 @@ pipeline {
 
     stages {
 
-        stage('Setup AWS CLI, Helm, and kubectl') {
+        stage('Setup Helm and kubectl') {
             steps {
                 script {
-                    echo "Setting up AWS CLI, kubectl, and Helm if not installed"
-
-                    // Ensure unzip is installed
-                    sh '''
-                    if ! command -v unzip &> /dev/null; then
-                        echo "Installing unzip"
-                        apt-get update && apt-get install -y unzip
-                    fi
-                    '''
-
-                    // Ensure AWS CLI is installed
-                    sh '''
-                    if ! command -v aws &> /dev/null; then
-                        echo "Installing AWS CLI"
-                        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                        unzip awscliv2.zip
-                        ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
-                    fi
-                    '''
+                    echo "Setting up kubectl and Helm if not installed"
 
                     // Ensure kubectl is installed
                     sh '''
