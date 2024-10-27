@@ -35,6 +35,10 @@ pipeline {
                   securityContext:
                     runAsUser: 1000
                     fsGroup: 1000
+                - name: install-tools
+                  image: ubuntu:20.04
+                  command: ['sleep', 'infinity']
+                  tty: true
               volumes:
                 - name: jenkins-home
                   emptyDir: {}
@@ -68,39 +72,34 @@ pipeline {
     }
 
     stages {
-        stage('Setup AWS CLI, Helm, and kubectl') {
+        stage('Setup Tools') {
             steps {
                 script {
-                    echo "Setting up AWS CLI, kubectl, and Helm if not installed"
+                    echo "Installing required packages"
+                    container('install-tools') {
+                        sh '''
+                        apt-get update
+                        apt-get install -y unzip curl
 
-                    // Ensure unzip and other tools are installed
-                    sh '''
-                    set -e  # Exit immediately if a command exits with a non-zero status
-                    echo "Updating package list and installing required packages"
-                    apt-get update && apt-get install -y unzip curl
-
-                    echo "Installing AWS CLI"
-                    if ! command -v aws &> /dev/null; then
+                        # Install AWS CLI
                         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
                         unzip awscliv2.zip
                         sudo ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
-                    fi
 
-                    echo "Installing kubectl"
-                    if ! command -v kubectl &> /dev/null; then
+                        # Install kubectl
                         curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
                         chmod +x kubectl
-                        mv kubectl /usr/local/bin/
-                    fi
+                        mv kubectl /home/jenkins/kubectl
+                        export PATH=$PATH:/home/jenkins
 
-                    echo "Installing Helm"
-                    if ! command -v helm &> /dev/null; then
+                        # Install Helm
                         curl -LO https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz
                         tar -zxvf helm-v3.9.0-linux-amd64.tar.gz
-                        mv linux-amd64/helm /usr/local/bin/
-                        chmod +x /usr/local/bin/helm
-                    fi
-                    '''
+                        mv linux-amd64/helm /home/jenkins/helm
+                        chmod +x /home/jenkins/helm
+                        export PATH=$PATH:/home/jenkins
+                        '''
+                    }
                 }
             }
         }
