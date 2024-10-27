@@ -84,20 +84,18 @@ pipeline {
                         # Install AWS CLI
                         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
                         unzip awscliv2.zip
-                        sudo ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
+                        ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
 
                         # Install kubectl
                         curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
                         chmod +x kubectl
-                        mv kubectl /home/jenkins/kubectl
-                        export PATH=$PATH:/home/jenkins
+                        mv kubectl /usr/local/bin/
 
                         # Install Helm
                         curl -LO https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz
                         tar -zxvf helm-v3.9.0-linux-amd64.tar.gz
-                        mv linux-amd64/helm /home/jenkins/helm
-                        chmod +x /home/jenkins/helm
-                        export PATH=$PATH:/home/jenkins
+                        mv linux-amd64/helm /usr/local/bin/
+                        chmod +x /usr/local/bin/helm
                         '''
                     }
                 }
