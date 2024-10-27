@@ -75,7 +75,7 @@ pipeline {
                     // Deploy the Nginx chart, assuming values.yaml is set up correctly
                     sh '''
                     /home/jenkins/helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
-                      --namespace benyz \
+                      --namespace bz-appy \
                       --set nginx.image=beny14/nginx_static \
                       --set nginx.replicas=1
                     '''
@@ -87,7 +87,7 @@ pipeline {
             steps {
                 script {
                     echo "Attempting to port-forward"
-                    sh '/home/jenkins/kubectl port-forward svc/nginx-service 4000:4000 -n benyz'
+                    sh '/home/jenkins/kubectl port-forward svc/nginx-service 4000:4000 -n bz-appy'
                 }
             }
         }
