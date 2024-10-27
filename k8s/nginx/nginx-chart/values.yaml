@@ -9,9 +9,7 @@ nginx:
     minReplicas: 1
     maxReplicas: 2
     targetCPUUtilizationPercentage: 50
-
   ingress:
     host: nginx.local  # Ensure this is set correctly
-
   pvc:
     storage: 1Gi
