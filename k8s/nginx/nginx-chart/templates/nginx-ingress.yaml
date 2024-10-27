@@ -16,4 +16,4 @@ spec:
               service:
                 name: nginx-service
                 port:
-                  number: 80  # Updated to match the service port
+                  number: 80  # Use the service port here

@@ -1,4 +1,4 @@
-piVersion: v1
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: nginx-pvc
@@ -8,5 +8,5 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.pvc.storage | default "1Gi" }}  # Default value
+      storage: {{ .Values.nginx.pvc.storage }}  # Update this line
   storageClassName: standard
