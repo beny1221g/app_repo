@@ -122,10 +122,11 @@ pipeline {
                 }
             }
         }
-        sleep(120)
+
         stage('Fetch Helm Chart') {
             steps {
                 script {
+                    sleep(120)
                     if (!fileExists(env.helm_chart_path)) {
                         echo "Helm chart not found. Cloning from Git..."
                         sh """
