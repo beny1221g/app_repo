@@ -67,7 +67,7 @@ pipeline {
         kubeconfig_path = "~/.kube/config"
         namespace = "bz-appy"
         sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:osher-nginx-deployment"
-        helm_chart_path = "/home/ec2-user/nginx-chart-0.1.0.tgz"
+        helm_chart_path = "/tmp/nginx_bz/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz"
         git_repo_url = "https://github.com/beny1221g/k8s.git"
     }
 
@@ -126,12 +126,10 @@ pipeline {
         stage('Fetch Helm Chart') {
             steps {
                 script {
-                    sleep(120)
                     if (!fileExists(env.helm_chart_path)) {
                         echo "Helm chart not found. Cloning from Git..."
                         sh """
                             git clone ${git_repo_url} /tmp/nginx_bz
-                            cp /tmp/nginx_bz/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz ${env.helm_chart_path}
                         """
                     } else {
                         echo "Helm chart found locally."
