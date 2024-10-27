@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: app-deployment
-  namespace: argocd
+  namespace: bz-argocd
 spec:
   project: app
   source:
@@ -11,7 +11,7 @@ spec:
     path: k8s/app/app-chart
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: benyz
+    namespace: bz-appy
   syncPolicy:
     automated:
       prune: true

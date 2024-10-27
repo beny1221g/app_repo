@@ -17,7 +17,7 @@ spec:
       - name: nginx
         image: {{ .Values.nginx.image }}
         ports:
-        - containerPort: 4000
+        - containerPort: 30000
         volumeMounts:
         - mountPath: /usr/share/nginx/html
           name: nginx-storage

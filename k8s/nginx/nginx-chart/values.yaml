@@ -3,7 +3,8 @@ namespace: bz-appy
 nginx:
   replicas: 1
   image: beny14/nginx_static:latest
-
+  service:
+    nodePort: 30000
   hpa:
     minReplicas: 1
     maxReplicas: 2

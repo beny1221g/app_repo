@@ -16,4 +16,4 @@ spec:
               service:
                 name: nginx-service
                 port:
-                  number: 4000
+                  number: 30000
