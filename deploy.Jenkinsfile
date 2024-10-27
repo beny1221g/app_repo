@@ -122,7 +122,7 @@ pipeline {
                 }
             }
         }
-        stage ('sleep') { steps {{ sleep(120) }}}
+        sleep(120)
         stage('Fetch Helm Chart') {
             steps {
                 script {
