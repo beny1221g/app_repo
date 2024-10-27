@@ -126,15 +126,17 @@ pipeline {
         stage('Fetch Helm Chart') {
             steps {
                 script {
-                    if (!fileExists(env.helm_chart_path)) {
-                        echo "Helm chart not found. Cloning from Git..."
-                        sh """
-                            git clone ${git_repo_url} /tmp/nginx
+                    echo "Fetching Helm chart..."
+                    sh """
+                        git clone ${git_repo_url} /tmp/nginx
+                        # Check if the chart exists before trying to copy
+                        if [ -f /tmp/nginx/nginx-chart/nginx-app-0.1.0.tgz ]; then
                             cp /tmp/nginx/nginx-chart/nginx-app-0.1.0.tgz ${env.helm_chart_path}
-                        """
-                    } else {
-                        echo "Helm chart found locally."
-                    }
+                        else
+                            echo "Helm chart not found at expected path."
+                            exit 1
+                        fi
+                    """
                 }
             }
         }
