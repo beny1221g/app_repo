@@ -54,10 +54,20 @@ pipeline {
 
     stages {
 
-        stage('Setup Helm and kubectl') {
+        stage('Setup AWS CLI, Helm, and kubectl') {
             steps {
                 script {
-                    echo "Setting up kubectl and Helm if not installed"
+                    echo "Setting up AWS CLI, kubectl, and Helm if not installed"
+
+                    // Ensure AWS CLI is installed
+                    sh '''
+                    if ! command -v aws &> /dev/null; then
+                        echo "Installing AWS CLI"
+                        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                        unzip awscliv2.zip
+                        ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
+                    fi
+                    '''
 
                     // Ensure kubectl is installed
                     sh '''
