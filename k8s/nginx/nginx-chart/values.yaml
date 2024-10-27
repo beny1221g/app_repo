@@ -1,12 +1,12 @@
 # For Nginx
-namespace: benyz
+namespace: bz-appy
 nginx:
   replicas: 1
   image: beny14/nginx_static:latest
 
   hpa:
     minReplicas: 1
-    maxReplicas: 5
+    maxReplicas: 2
     targetCPUUtilizationPercentage: 50
 
   ingress:

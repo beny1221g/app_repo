@@ -1,4 +1,4 @@
-namespace: benyz
+namespace: bz-appy
 pvc:
   storage: 1Gi
 app:
