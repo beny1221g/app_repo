@@ -1,35 +1,31 @@
 pipeline {
     agent {
         kubernetes {
-            yaml '''
-            apiVersion: v1
-            kind: Pod
-            metadata:
-              name: jenkins-agent
-              namespace: bz-jenkins
-            spec:
-              containers:
-                - name: jenkins-agent
-                  image: beny14/dockerfile_agent:latest
-                  command:
-                    - java
-                    - -jar
-                    - /usr/share/jenkins/agent.jar
-                  args:
-                    - -url
-                    - http://k8s-bzjenkin-releasej-c663409355-6f66daf7dc73980b.elb.us-east-2.amazonaws.com:8080
-                    - -name
-                    - jenkins-agent
-                    - -secret
-                    - ${env.JENKINS_AGENT_SECRET}
-                    - -workDir
-                    - /home/jenkins/agent
-                  tty: true
-                  securityContext:
-                    runAsUser: 0
-                    allowPrivilegeEscalation: true
-              restartPolicy: Never
-            '''
+        yaml '''
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: jenkins-agent
+          namespace: bz-jenkins
+        spec:
+          containers:
+            - name: jenkins-agent
+              image: your_docker_registry/jenkins-custom-agent:latest
+              command:
+                - java
+                - -jar
+                - /usr/share/jenkins/agent.jar
+              args:
+                - -jnlpUrl
+                - http://k8s-bzjenkin-releasej-c663409355-6f66daf7dc73980b.elb.us-east-2.amazonaws.com:8080/computer/jenkins-agent/slave-agent.jnlp
+                - -secret
+                - ${env.JENKINS_AGENT_SECRET}
+                - -workDir
+                - /home/jenkins/agent
+              tty: true
+          restartPolicy: Never
+        '''
+
         }
     }
 
@@ -45,8 +41,10 @@ pipeline {
         aws_region = "us-east-2"
         ecr_registry = "023196572641.dkr.ecr.us-east-2.amazonaws.com"
         ecr_repo = "${ecr_registry}/beny14/aws_repo"
+
         image_tag_p = "python_app:${BUILD_NUMBER}"
         image_tag_n = "nginx_static:${BUILD_NUMBER}"
+
         cluster_name = "eks-X10-prod-01"
         kubeconfig_path = "~/.kube/config"
         namespace = "bz-appy"
@@ -56,6 +54,7 @@ pipeline {
     }
 
     stages {
+
         stage('Setup AWS CLI, Helm, and kubectl') {
             steps {
                 script {
@@ -106,13 +105,16 @@ pipeline {
 
         stage('AWS Configure') {
             steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                    credentialsId: 'aws'
-                ]]) {
+                withCredentials([
+                    [
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                        credentialsId: 'aws'
+                    ]
+                ]) {
                     script {
+                        // Configure AWS CLI with the provided credentials and region
                         sh """
                             aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
                             aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
