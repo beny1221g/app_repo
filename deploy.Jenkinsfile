@@ -1,49 +1,47 @@
 pipeline {
-  agent {
-    kubernetes {
-        yaml '''
-        apiVersion: v1
-        kind: Pod
-        metadata:
-          name: jenkins-agent
-          namespace: bz-jenkins
-        spec:
-          initContainers:
-            - name: init-permissions
-              image: busybox
-              command: ['sh', '-c', 'chmod -R 777 /home/jenkins/agent']
-              volumeMounts:
+    agent {
+        kubernetes {
+            yaml '''
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              name: jenkins-agent
+              namespace: bz-jenkins
+            spec:
+              initContainers:
+                - name: init-permissions
+                  image: busybox
+                  command: ['sh', '-c', 'chmod -R 777 /home/jenkins/agent']
+                  volumeMounts:
+                    - name: jenkins-home
+                      mountPath: /home/jenkins/agent
+              containers:
+                - name: jenkins-agent
+                  image: beny14/dockerfile_agent:latest
+                  command:
+                    - java
+                    - -jar
+                    - /usr/share/jenkins/agent.jar
+                  args:
+                    - -url
+                    - http://k8s-bzjenkin-releasej-c663409355-6f66daf7dc73980b.elb.us-east-2.amazonaws.com:8080
+                    - -name
+                    - jenkins-agent
+                    - -secret
+                    - ${env.JENKINS_AGENT_SECRET}
+                    - -workDir
+                    - /home/jenkins/agent
+                  tty: true
+                  securityContext:
+                    runAsUser: 1000
+                    fsGroup: 1000
+              volumes:
                 - name: jenkins-home
-                  mountPath: /home/jenkins/agent
-          containers:
-            - name: jenkins-agent
-              image: beny14/dockerfile_agent:latest
-              command:
-                - java
-                - -jar
-                - /usr/share/jenkins/agent.jar
-              args:
-                - -url
-                - http://k8s-bzjenkin-releasej-c663409355-6f66daf7dc73980b.elb.us-east-2.amazonaws.com:8080
-                - -name
-                - jenkins-agent
-                - -secret
-                - ${env.JENKINS_AGENT_SECRET}
-                - -workDir
-                - /home/jenkins/agent
-              tty: true
-              securityContext:
-                runAsUser: 1000
-                fsGroup: 1000
-          volumes:
-            - name: jenkins-home
-              emptyDir: {}
-          restartPolicy: Never
-        '''
+                  emptyDir: {}
+              restartPolicy: Never
+            '''
+        }
     }
-}
-
-
 
     options {
         timeout(time: 5, unit: 'MINUTES')
@@ -70,49 +68,37 @@ pipeline {
     }
 
     stages {
-
         stage('Setup AWS CLI, Helm, and kubectl') {
             steps {
                 script {
                     echo "Setting up AWS CLI, kubectl, and Helm if not installed"
 
-                    // Ensure unzip is installed
+                    // Ensure unzip and other tools are installed
                     sh '''
-                    if ! command -v unzip &> /dev/null; then
-                        echo "Installing unzip"
-                        apt-get update && apt-get install -y unzip
-                    fi
-                    '''
+                    set -e  # Exit immediately if a command exits with a non-zero status
+                    echo "Updating package list and installing required packages"
+                    apt-get update && apt-get install -y unzip curl
 
-                    // Ensure AWS CLI is installed
-                    sh '''
+                    echo "Installing AWS CLI"
                     if ! command -v aws &> /dev/null; then
-                        echo "Installing AWS CLI"
                         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
                         unzip awscliv2.zip
-                        ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
+                        sudo ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
                     fi
-                    '''
 
-                    // Ensure kubectl is installed
-                    sh '''
+                    echo "Installing kubectl"
                     if ! command -v kubectl &> /dev/null; then
-                        echo "Installing kubectl"
-                        curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && \
-                        chmod +x kubectl && mv kubectl /home/jenkins/kubectl
-                        export PATH=$PATH:/home/jenkins
+                        curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+                        chmod +x kubectl
+                        mv kubectl /usr/local/bin/
                     fi
-                    '''
 
-                    // Ensure Helm is installed
-                    sh '''
+                    echo "Installing Helm"
                     if ! command -v helm &> /dev/null; then
-                        echo "Installing Helm"
-                        curl -LO https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz && \
-                        tar -zxvf helm-v3.9.0-linux-amd64.tar.gz && \
-                        mv linux-amd64/helm /home/jenkins/helm && \
-                        chmod +x /home/jenkins/helm
-                        export PATH=$PATH:/home/jenkins
+                        curl -LO https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz
+                        tar -zxvf helm-v3.9.0-linux-amd64.tar.gz
+                        mv linux-amd64/helm /usr/local/bin/
+                        chmod +x /usr/local/bin/helm
                     fi
                     '''
                 }
@@ -121,14 +107,12 @@ pipeline {
 
         stage('AWS Configure') {
             steps {
-                withCredentials([
-                    [
-                        $class: 'AmazonWebServicesCredentialsBinding',
-                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                        credentialsId: 'aws'
-                    ]
-                ]) {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                    credentialsId: 'aws'
+                ]]) {
                     script {
                         // Configure AWS CLI with the provided credentials and region
                         sh """
