@@ -59,6 +59,14 @@ pipeline {
                 script {
                     echo "Setting up AWS CLI, kubectl, and Helm if not installed"
 
+                    // Ensure unzip is installed
+                    sh '''
+                    if ! command -v unzip &> /dev/null; then
+                        echo "Installing unzip"
+                        apt-get update && apt-get install -y unzip
+                    fi
+                    '''
+
                     // Ensure AWS CLI is installed
                     sh '''
                     if ! command -v aws &> /dev/null; then
