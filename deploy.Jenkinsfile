@@ -126,17 +126,15 @@ pipeline {
         stage('Fetch Helm Chart') {
             steps {
                 script {
-                    echo "Fetching Helm chart..."
-                    sh """
-                        git clone ${git_repo_url} /tmp/nginx
-                        # Check if the chart exists before trying to copy
-                        if [ -f /tmp/nginx/k8s/nginx/nginx-chart/nginx-app-0.1.0.tgz ]; then
-                            cp /tmp/nginx/k8s/nginx/nginx-chart/nginx-app-0.1.0.tgz ${env.helm_chart_path}
-                        else
-                            echo "Helm chart not found at expected path."
-                            exit 1
-                        fi
-                    """
+                    if (!fileExists(env.helm_chart_path)) {
+                        echo "Helm chart not found. Cloning from Git..."
+                        sh """
+                            git clone ${git_repo_url} /tmp/nginx_bz
+                            cp /tmp/nginx_bz/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz ${env.helm_chart_path}
+                        """
+                    } else {
+                        echo "Helm chart found locally."
+                    }
                 }
             }
         }
@@ -144,16 +142,13 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    container('install-tools') { // Ensure commands run in the context where Helm is installed
-                        sh """
-                            export HELM_DRIVER=configmap
-                            helm install nginx-chart ${env.helm_chart_path} -n ${namespace} --kubeconfig ${kubeconfig_path}
-                        """
-                    }
+                    sh """
+                        export HELM_DRIVER=configmap
+                        helm install nginx-bz ${env.helm_chart_path} -n ${namespace} --kubeconfig ${kubeconfig_path}
+                    """
                 }
             }
         }
-    }
 
     post {
         success {
