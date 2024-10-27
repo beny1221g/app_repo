@@ -36,7 +36,24 @@ pipeline {
         string(name: 'JENKINS_AGENT_SECRET', defaultValue: '', description: 'Jenkins Agent Secret')
     }
 
+    environment {
+        aws_region = "us-east-2"
+        ecr_registry = "023196572641.dkr.ecr.us-east-2.amazonaws.com"
+        ecr_repo = "${ecr_registry}/beny14/aws_repo"
+
+        image_tag_p = "python_app:${BUILD_NUMBER}"
+        image_tag_n = "nginx_static:${BUILD_NUMBER}"
+
+        cluster_name = "eks-X10-prod-01"
+        kubeconfig_path = "~/.kube/config"
+        namespace = "bz-appy"
+        sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:osher-nginx-deployment"
+        helm_chart_path = "/home/ec2-user/nginx-chart-0.1.0.tgz"
+        git_repo_url = "https://github.com/beny1221g/k8s.git"
+    }
+
     stages {
+
         stage('Setup Helm and kubectl') {
             steps {
                 script {
@@ -67,171 +84,72 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('AWS Configure') {
             steps {
-               script {
-                echo "Deploying Nginx with DockerHub image"
-
-                 sh '''
-                 /home/jenkins/helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
-                   --namespace bz-appy \
-                   --set nginx.image=beny14/nginx_static \
-                   --set nginx.replicas=1
-                    '''
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                    credentialsId: 'aws'
+                ]]) {
+                    script {
+                        // Configure AWS CLI with the provided credentials and region
+                        sh """
+                            aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+                            aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+                            aws configure set region ${aws_region}
+                        """
+                    }
+                }
+            }
         }
-    }
-}
 
-        stage('Port Forwarding') {
+        stage('Fetch Helm Chart') {
             steps {
                 script {
-                    echo "Attempting to port-forward"
-                    sh '/home/jenkins/kubectl port-forward svc/nginx-service 4000:4000 -n bz-appy'
+                    if (!fileExists(env.helm_chart_path)) {
+                        echo "Helm chart not found. Cloning from Git..."
+                        sh """
+                            git clone ${git_repo_url} /tmp/nginx
+                            cp /tmp/nginx/nginx-chart/nginx-app-0.1.0.tgz ${env.helm_chart_path}
+                        """
+                    } else {
+                        echo "Helm chart found locally."
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    sh """
+                        export HELM_DRIVER=configmap
+                        helm install nginx-chart ${env.helm_chart_path} -n ${namespace} --kubeconfig ${kubeconfig_path}
+                    """
                 }
             }
         }
     }
 
     post {
-        always {
-            echo "Pipeline completed"
+        success {
+            echo "Deployment to EKS completed successfully."
+            sendSNSNotification("SUCCESS", "nginx-Deployment to EKS completed successfully for ${env.deployment_name}")
         }
         failure {
-            echo "Pipeline failed"
+            echo "Deployment failed. Check logs for details."
+            sendSNSNotification("FAILURE", "Deployment failed for ${env.deployment_name}. Check logs for details.")
         }
     }
 }
 
-
-// pipeline {
-//     agent {
-//         kubernetes {
-//             yaml '''
-//             apiVersion: v1
-//             kind: Pod
-//             metadata:
-//               name: jenkins-agent
-//               namespace: jenkins
-//             spec:
-//               containers:
-//                 - name: jenkins-agent
-//                   image: beny14/dockerfile_agent:latest
-//                   command:
-//                     - java
-//                     - -jar
-//                     - /usr/share/jenkins/agent.jar
-//                   args:
-//                     - -jnlpUrl
-//                     - http://192.168.49.2:30080/computer/jenkins-agent/slave-agent.jnlp
-//                     - -secret
-//                     - ${env.JENKINS_AGENT_SECRET} // Use an environment variable for the secret
-//                     - -workDir
-//                     - /home/jenkins/agent
-//                   tty: true
-//               restartPolicy: Never
-//               containers:
-//                 - name: jenkins-agent
-//                   image: beny14/dockerfile_agent:latest
-//                   command:
-//                     - java
-//                     - -jar
-//                     - /usr/share/jenkins/agent.jar
-//                   args:
-//                     - -jnlpUrl
-//                     - http://192.168.49.2:30080/computer/jenkins-agent/slave-agent.jnlp
-//                     - -secret
-//                     - ${env.JENKINS_AGENT_SECRET} // Use an environment variable for the secret
-//                     - -workDir
-//                     - /home/jenkins/agent
-//                   tty: true
-//               restartPolicy: Never
-//             '''
-//         }
-//     }
-//
-//     options {
-//         timeout(time: 2, unit: 'MINUTES') // Agent connection timeout
-//     }
-//
-//     parameters {
-//         string(name: 'PYTHON_IMAGE_NAME', defaultValue: 'beny14/python_app:latest', description: 'Python Docker image name')
-//         string(name: 'PYTHON_BUILD_NUMBER', defaultValue: '', description: 'Python Docker image build number')
-//         string(name: 'NGINX_IMAGE_NAME', defaultValue: 'beny14/nginx_static:latest', description: 'Nginx Docker image name')
-//         string(name: 'NGINX_BUILD_NUMBER', defaultValue: '', description: 'Nginx Docker image build number')
-//         string(name: 'JENKINS_AGENT_SECRET', defaultValue: '', description: 'Jenkins Agent Secret') // Add a parameter for the secret
-//     }
-//
-//     stages {
-//         stage('Setup') {
-//             steps {
-//                 script {
-//                     echo "Setting up namespace"
-//
-//                     // Ensure the namespace exists
-//                     sh 'kubectl create namespace jenkins || true'
-//                 }
-//             }
-//         }
-//
-//         stage('Deploy to Kubernetes') {
-//             steps {
-//                 script {
-//                     echo "Applying Kubernetes configurations"
-//
-//                     // Validate build numbers
-//                     if (!params.PYTHON_BUILD_NUMBER?.trim() || !params.NGINX_BUILD_NUMBER?.trim()) {
-//                         error("Build numbers for Python and Nginx cannot be empty")
-//                     }
-//
-//                     // Apply Helm charts with custom image tags
-//                     try {
-//                         sh """
-//                         helm upgrade --install app-release ./k8s/app/app-chart \
-//                           --namespace jenkins \
-//                           --set image.tag=${params.PYTHON_BUILD_NUMBER} || exit 1
-//
-//                         helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
-//                           --namespace jenkins \
-//                           --set image.tag=${params.NGINX_BUILD_NUMBER} || exit 1
-//                         """
-//                     } catch (Exception e) {
-//                         error "Failed to deploy applications: ${e.message}"
-//                     }
-//
-//                     echo "Kubernetes configurations applied"
-//                 }
-//             }
-//         }
-//
-//         // Optional debugging stages
-//         /*
-//         stage('Check Pod Status') {
-//             steps {
-//                 script {
-//                     echo "Checking pod status"
-//                     sh 'kubectl get pods -n jenkins'
-//                     sh 'kubectl describe pods -n jenkins'
-//                 }
-//             }
-//         }
-//
-//         stage('Port Forwarding') {
-//             steps {
-//                 script {
-//                     echo "Attempting to port-forward"
-//                     sh 'kubectl port-forward svc/nginx-service 4000:4000 -n jenkins'
-//                 }
-//             }
-//         }
-//         */
-//     }
-//
-//     post {
-//         always {
-//             echo "Pipeline completed"
-//         }
-//         failure {
-//             echo "Pipeline failed"
-//         }
-//     }
-// }
+def sendSNSNotification(status, message) {
+    sh """
+        aws sns publish \
+            --region ${env.aws_region} \
+            --topic-arn ${env.sns_topic_arn} \
+            --message "Deployment Status: ${status}\\nMessage: ${message}" \
+            --subject "Deployment ${status}: ${env.deployment_name}"
+    """
+}
