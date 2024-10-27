@@ -69,18 +69,18 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    echo "Deploying Nginx with DockerHub image"
+               script {
+                echo "Deploying Nginx with DockerHub image"
 
-                    sh '''
-                    /home/jenkins/helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
-                      --namespace bz-appy \
-                      --set nginx.image=beny14/nginx_static \
-                      --set nginx.replicas=1
+                 sh '''
+                 /home/jenkins/helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
+                   --namespace bz-appy \
+                   --set nginx.image=beny14/nginx_static \
+                   --set nginx.replicas=1
                     '''
-                }
-            }
         }
+    }
+}
 
         stage('Port Forwarding') {
             steps {
