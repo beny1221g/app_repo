@@ -67,7 +67,7 @@ pipeline {
         kubeconfig_path = "~/.kube/config"
         namespace = "bz-appy"
         sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:osher-nginx-deployment"
-        helm_chart_path = "/home/ec2-user/nginx-chart-0.1.0.tgz"
+        helm_chart_path = "/home/ec2-user/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz"
         git_repo_url = "https://github.com/beny1221g/k8s.git"
     }
 
