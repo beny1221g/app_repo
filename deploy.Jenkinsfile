@@ -72,7 +72,6 @@ pipeline {
                 script {
                     echo "Deploying Nginx with DockerHub image"
 
-                    // Deploy the Nginx chart, assuming values.yaml is set up correctly
                     sh '''
                     /home/jenkins/helm upgrade --install nginx-release ./k8s/nginx/nginx-chart \
                       --namespace bz-appy \
