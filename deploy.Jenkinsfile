@@ -23,6 +23,9 @@ pipeline {
                     - -workDir
                     - /home/jenkins/agent
                   tty: true
+                  securityContext:
+                    runAsUser: 0
+                    allowPrivilegeEscalation: true
               restartPolicy: Never
             '''
         }
