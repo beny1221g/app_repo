@@ -17,7 +17,7 @@ spec:
       - name: nginx
         image: {{ .Values.nginx.image }}
         ports:
-        - containerPort: 30000
+        - containerPort: 80  # Change this to the standard port for Nginx
         volumeMounts:
         - mountPath: /usr/share/nginx/html
           name: nginx-storage

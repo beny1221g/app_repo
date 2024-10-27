@@ -8,7 +8,7 @@ spec:
     app: nginx
   ports:
     - protocol: TCP
-      port: 30000
-      targetPort: 30000
+      port: 80  # This should match the containerPort in the deployment
+      targetPort: 80  # This should also match the containerPort
       nodePort: {{ .Values.nginx.service.nodePort | default 30002 }}
   type: NodePort
