@@ -149,7 +149,7 @@ pipeline {
                 }
             }
         }
-
+}
     post {
         success {
             echo "Deployment to EKS completed successfully."
