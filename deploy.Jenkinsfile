@@ -132,7 +132,6 @@ pipeline {
                         """
                     } else {
                         echo "Helm chart found locally."
-                        echo ("ls location " , sh """ ls /tmp/nginx_bz """)
                     }
                 }
             }
@@ -143,6 +142,8 @@ pipeline {
                 container('install-tools') {
                     script {
                         sh """
+                            ls /tmp/nginx_bz
+
                             export HELM_DRIVER=configmap
                             helm install nginx-bz ${env.helm_chart_path} -n ${namespace} --kubeconfig ${kubeconfig_path}
                         """
