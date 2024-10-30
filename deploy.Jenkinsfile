@@ -132,6 +132,7 @@ pipeline {
                         """
                     } else {
                         echo "Helm chart found locally."
+                        echo ("ls location " , sh """ ls /tmp/nginx_bz """)
                     }
                 }
             }
