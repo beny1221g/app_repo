@@ -62,11 +62,11 @@ pipeline {
         image_tag_p = "python_app:${BUILD_NUMBER}"
         image_tag_n = "nginx_static:${BUILD_NUMBER}"
         cluster_name = "eks-X10-prod-01"
-        kubeconfig_path = "/root/.kube/config" // Make sure this path is correct
+        kubeconfig_path = "/root/.kube/config" // Ensure this path is correct and the config file exists
         namespace = "bz-appy"
         sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:osher-nginx-deployment"
         git_repo_url = "https://github.com/beny1221g/k8s.git"
-        localHelmPath = "${WORKSPACE}/nginx-chart/nginx-chart-0.1.0.tgz" // Updated path to use Jenkins workspace
+        localHelmPath = "${WORKSPACE}/nginx-chart/nginx-chart-0.1.0.tgz" // Path to the Helm chart
     }
 
     stages {
@@ -115,29 +115,29 @@ pipeline {
             }
         }
 
-
         stage('Download Helm Chart') {
-    steps {
-        container('install-tools') {
-            script {
-                echo "Cloning repository for Helm chart..."
-                sh '''
-                    git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/nginx-chart
-                    echo "Contents of the directory after cloning:"
-                    ls -l /home/jenkins/agent/workspace/app_deploy/nginx-chart
+            steps {
+                container('install-tools') {
+                    script {
+                        echo "Cloning repository for Helm chart..."
+                        sh '''
+                            git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/nginx-chart
+                            echo "Contents of the directory after cloning:"
+                            ls -l /home/jenkins/agent/workspace/app_deploy/nginx-chart
 
-                    # Check the actual structure
-                    echo "Checking directory structure:"
-                    ls -R /home/jenkins/agent/workspace/app_deploy/nginx-chart
+                            # Check the actual structure
+                            echo "Checking directory structure:"
+                            ls -R /home/jenkins/agent/workspace/app_deploy/nginx-chart
 
-                    # List contents before the deployment
-                    echo "Contents of the deployment directory:"
-                    ls -l /home/jenkins/agent/workspace/app_deploy/nginx-chart/k8s/nginx/nginx-chart
-                '''
+                            # Ensure the chart is at the expected path
+                            echo "Listing expected Helm chart:"
+                            ls -l /home/jenkins/agent/workspace/app_deploy/nginx-chart/nginx-chart
+                        '''
+                    }
+                }
             }
         }
-    }
-}
+
         stage('Deploy to Kubernetes') {
             steps {
                 container('install-tools') {
