@@ -62,7 +62,7 @@ pipeline {
         image_tag_p = "python_app:${BUILD_NUMBER}"
         image_tag_n = "nginx_static:${BUILD_NUMBER}"
         cluster_name = "eks-X10-prod-01"
-        kubeconfig_path = "/root/.kube/config"
+        kubeconfig_path = "/root/.kube/config" // Make sure this path is correct
         namespace = "bz-appy"
         sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:osher-nginx-deployment"
         git_repo_url = "https://github.com/beny1221g/k8s.git"
@@ -115,57 +115,61 @@ pipeline {
             }
         }
 
-stage('Download Helm Chart') {
-    steps {
-        container('install-tools') {
-            script {
-                echo "Cloning repository for Helm chart..."
-                sh '''
-                    git clone https://github.com/beny1221g/k8s.git /home/jenkins/agent/workspace/app_deploy/nginx-chart
-                    echo "Contents of the directory after cloning:"
-                    ls -l /home/jenkins/agent/workspace/app_deploy/nginx-chart
+        stage('Download Helm Chart') {
+            steps {
+                container('install-tools') {
+                    script {
+                        echo "Cloning repository for Helm chart..."
+                        sh '''
+                            git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/nginx-chart
+                            echo "Contents of the directory after cloning:"
+                            ls -l /home/jenkins/agent/workspace/app_deploy/nginx-chart
 
-                    # Check the actual structure
-                    echo "Checking directory structure:"
-                    ls -R /home/jenkins/agent/workspace/app_deploy/nginx-chart
+                            # Check the actual structure
+                            echo "Checking directory structure:"
+                            ls -R /home/jenkins/agent/workspace/app_deploy/nginx-chart
 
-                    # Navigate to the expected Helm chart directory
-                    cd /home/jenkins/agent/workspace/app_deploy/nginx-chart/k8s/nginx/nginx-chart || { echo "Helm chart directory not found"; exit 1; }
+                            # Navigate to the expected Helm chart directory
+                            cd /home/jenkins/agent/workspace/app_deploy/nginx-chart/k8s/nginx/nginx-chart || { echo "Helm chart directory not found"; exit 1; }
 
-                    # Check if the Helm chart exists
-                    echo "Checking for Helm chart in the expected directory..."
-                    if [ -f "nginx-chart-0.1.0.tgz" ]; then
-                        echo "Helm chart found."
-                    else
-                        echo "Helm chart NOT found. Listing files in the directory:"
-                        ls -l
-                    fi
-                '''
+                            # Check if the Helm chart exists
+                            echo "Checking for Helm chart in the expected directory..."
+                            if [ -f "nginx-chart-0.1.0.tgz" ]; then
+                                echo "Helm chart found."
+                            else
+                                echo "Helm chart NOT found. Listing files in the directory:"
+                                ls -l
+                            fi
+                        '''
+                    }
+                }
             }
         }
-    }
-}
 
+        stage('Deploy to Kubernetes') {
+            steps {
+                container('install-tools') {
+                    script {
+                        echo "Attempting to install Helm chart from: ${localHelmPath}"
 
+                        // Update the Helm install command
+                        sh '''
+                            export KUBECONFIG=${kubeconfig_path}  # Adjust the path as necessary
+                            export HELM_DRIVER=configmap
 
-stage('Deploy to Kubernetes') {
-    steps {
-        container('install-tools') {
-            script {
-                echo "Attempting to install Helm chart from: /home/jenkins/agent/workspace/app_deploy/nginx-chart/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz"
-
-                // Update the Helm install command
-                sh '''
-                    export KUBECONFIG=/root/.kube/config  # Adjust the path as necessary
-                    export HELM_DRIVER=configmap
-                    helm install nginx-bz /home/jenkins/agent/workspace/app_deploy/nginx-chart/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz -n bz-appy
-                '''
+                            # Check if the release already exists
+                            if helm ls -n ${namespace} | grep -q nginx-bz; then
+                                echo "Release nginx-bz already exists. Attempting to upgrade..."
+                                helm upgrade nginx-bz ${localHelmPath} -n ${namespace} --install
+                            else
+                                echo "Installing new release nginx-bz..."
+                                helm install nginx-bz ${localHelmPath} -n ${namespace}
+                            fi
+                        '''
+                    }
+                }
             }
         }
-    }
-}
-
-
     }
 
     post {
