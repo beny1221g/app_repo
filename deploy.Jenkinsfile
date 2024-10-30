@@ -1,51 +1,57 @@
 pipeline {
-    agent {
-        kubernetes {
-            yaml '''
-            apiVersion: v1
-            kind: Pod
-            metadata:
-              name: jenkins-agent
-              namespace: bz-jenkins
-            spec:
-              initContainers:
-                - name: init-permissions
-                  image: busybox
-                  command: ['sh', '-c', 'chmod -R 777 /home/jenkins/agent']
-                  volumeMounts:
-                    - name: jenkins-home
-                      mountPath: /home/jenkins/agent
-              containers:
-                - name: jenkins-agent
-                  image: beny14/dockerfile_agent:latest
-                  command:
-                    - java
-                    - -jar
-                    - /usr/share/jenkins/agent.jar
-                  args:
-                    - -url
-                    - http://k8s-bzjenkin-releasej-c663409355-6f66daf7dc73980b.elb.us-east-2.amazonaws.com:8080
-                    - -name
-                    - jenkins-agent
-                    - -secret
-                    - ${env.JENKINS_AGENT_SECRET}
-                    - -workDir
-                    - /home/jenkins/agent
-                  tty: true
-                  securityContext:
-                    runAsUser: 1000
-                    fsGroup: 1000
-                - name: install-tools
-                  image: ubuntu:20.04
-                  command: ['sleep', 'infinity']
-                  tty: true
-              volumes:
+agent {
+    kubernetes {
+        yaml '''
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: jenkins-agent
+          namespace: bz-jenkins
+        spec:
+          initContainers:
+            - name: init-permissions
+              image: busybox
+              command: ['sh', '-c', 'chmod -R 777 /home/jenkins/agent']
+              volumeMounts:
                 - name: jenkins-home
-                  emptyDir: {}
-              restartPolicy: Never
-            '''
-        }
+                  mountPath: /home/jenkins/agent
+          containers:
+            - name: jenkins-agent
+              image: beny14/dockerfile_agent:latest
+              command:
+                - java
+                - -jar
+                - /usr/share/jenkins/agent.jar
+              args:
+                - -url
+                - http://k8s-bzjenkin-releasej-c663409355-6f66daf7dc73980b.elb.us-east-2.amazonaws.com:8080
+                - -name
+                - jenkins-agent
+                - -secret
+                - ${env.JENKINS_AGENT_SECRET}
+                - -workDir
+                - /home/jenkins/agent
+              tty: true
+              securityContext:
+                runAsUser: 1000
+                fsGroup: 1000
+              volumeMounts:
+                - name: kubeconfig-volume
+                  mountPath: /root/.kube
+            - name: install-tools
+              image: ubuntu:20.04
+              command: ['sleep', 'infinity']
+              tty: true
+          volumes:
+            - name: jenkins-home
+              emptyDir: {}
+            - name: kubeconfig-volume
+              secret:
+                secretName: your-kubeconfig-secret # Replace with your secret name
+          restartPolicy: Never
+        '''
     }
+}
 
     options {
         timeout(time: 5, unit: 'MINUTES')
@@ -115,37 +121,29 @@ pipeline {
             }
         }
 
+
         stage('Download Helm Chart') {
-            steps {
-                container('install-tools') {
-                    script {
-                        echo "Cloning repository for Helm chart..."
-                        sh '''
-                            git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/nginx-chart
-                            echo "Contents of the directory after cloning:"
-                            ls -l /home/jenkins/agent/workspace/app_deploy/nginx-chart
+    steps {
+        container('install-tools') {
+            script {
+                echo "Cloning repository for Helm chart..."
+                sh '''
+                    git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/nginx-chart
+                    echo "Contents of the directory after cloning:"
+                    ls -l /home/jenkins/agent/workspace/app_deploy/nginx-chart
 
-                            # Check the actual structure
-                            echo "Checking directory structure:"
-                            ls -R /home/jenkins/agent/workspace/app_deploy/nginx-chart
+                    # Check the actual structure
+                    echo "Checking directory structure:"
+                    ls -R /home/jenkins/agent/workspace/app_deploy/nginx-chart
 
-                            # Navigate to the expected Helm chart directory
-                            cd /home/jenkins/agent/workspace/app_deploy/nginx-chart/k8s/nginx/nginx-chart || { echo "Helm chart directory not found"; exit 1; }
-
-                            # Check if the Helm chart exists
-                            echo "Checking for Helm chart in the expected directory..."
-                            if [ -f "nginx-chart-0.1.0.tgz" ]; then
-                                echo "Helm chart found."
-                            else
-                                echo "Helm chart NOT found. Listing files in the directory:"
-                                ls -l
-                            fi
-                        '''
-                    }
-                }
+                    # List contents before the deployment
+                    echo "Contents of the deployment directory:"
+                    ls -l /home/jenkins/agent/workspace/app_deploy/nginx-chart/k8s/nginx/nginx-chart
+                '''
             }
         }
-
+    }
+}
         stage('Deploy to Kubernetes') {
             steps {
                 container('install-tools') {
