@@ -1,57 +1,51 @@
 pipeline {
-agent {
-    kubernetes {
-        yaml '''
-        apiVersion: v1
-        kind: Pod
-        metadata:
-          name: jenkins-agent
-          namespace: bz-jenkins
-        spec:
-          initContainers:
-            - name: init-permissions
-              image: busybox
-              command: ['sh', '-c', 'chmod -R 777 /home/jenkins/agent']
-              volumeMounts:
+    agent {
+        kubernetes {
+            yaml '''
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              name: jenkins-agent
+              namespace: bz-jenkins
+            spec:
+              initContainers:
+                - name: init-permissions
+                  image: busybox
+                  command: ['sh', '-c', 'chmod -R 777 /home/jenkins/agent']
+                  volumeMounts:
+                    - name: jenkins-home
+                      mountPath: /home/jenkins/agent
+              containers:
+                - name: jenkins-agent
+                  image: beny14/dockerfile_agent:latest
+                  command:
+                    - java
+                    - -jar
+                    - /usr/share/jenkins/agent.jar
+                  args:
+                    - -url
+                    - http://k8s-bzjenkin-releasej-c663409355-6f66daf7dc73980b.elb.us-east-2.amazonaws.com:8080
+                    - -name
+                    - jenkins-agent
+                    - -secret
+                    - ${env.JENKINS_AGENT_SECRET}
+                    - -workDir
+                    - /home/jenkins/agent
+                  tty: true
+                  securityContext:
+                    runAsUser: 1000
+                    fsGroup: 1000
+                - name: install-tools
+                  image: ubuntu:20.04
+                  command: ['sleep', 'infinity']
+                  tty: true
+              volumes:
                 - name: jenkins-home
-                  mountPath: /home/jenkins/agent
-          containers:
-            - name: jenkins-agent
-              image: beny14/dockerfile_agent:latest
-              command:
-                - java
-                - -jar
-                - /usr/share/jenkins/agent.jar
-              args:
-                - -url
-                - http://k8s-bzjenkin-releasej-c663409355-6f66daf7dc73980b.elb.us-east-2.amazonaws.com:8080
-                - -name
-                - jenkins-agent
-                - -secret
-                - ${env.JENKINS_AGENT_SECRET}
-                - -workDir
-                - /home/jenkins/agent
-              tty: true
-              securityContext:
-                runAsUser: 1000
-                fsGroup: 1000
-              volumeMounts:
-                - name: kubeconfig-volume
-                  mountPath: /root/.kube
-            - name: install-tools
-              image: ubuntu:20.04
-              command: ['sleep', 'infinity']
-              tty: true
-          volumes:
-            - name: jenkins-home
-              emptyDir: {}
-            - name: kubeconfig-volume
-              secret:
-                secretName: your-kubeconfig-secret # Replace with your secret name
-          restartPolicy: Never
-        '''
+                  emptyDir: {}
+              restartPolicy: Never
+            '''
+        }
     }
-}
 
     options {
         timeout(time: 5, unit: 'MINUTES')
