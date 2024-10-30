@@ -131,15 +131,15 @@ pipeline {
 
                         // List the contents of the directory to verify the file exists
                         sh """
-                            echo "Listing files in directory: $(dirname ${localHelmPath})"
-                            ls -l $(dirname ${localHelmPath})  # Show the directory listing where the chart is located
+                            echo "Listing files in directory: $(dirname "${localHelmPath}")"
+                            ls -l $(dirname "${localHelmPath}")  # Show the directory listing where the chart is located
                         """
 
                         // Proceed with Helm installation
                         echo "Running Helm install command..."
                         sh """
                             export HELM_DRIVER=configmap
-                            helm install nginx-bz ${localHelmPath} -n ${namespace} --kubeconfig ${kubeconfig_path}
+                            helm install nginx-bz "${localHelmPath}" -n "${namespace}" --kubeconfig "${kubeconfig_path}"
                         """
                     }
                 }
@@ -169,8 +169,8 @@ def sendSNSNotification(status, message) {
             container('install-tools') {
                 sh """
                     aws sns publish \
-                        --region ${env.aws_region} \
-                        --topic-arn ${env.sns_topic_arn} \
+                        --region "${env.aws_region}" \
+                        --topic-arn "${env.sns_topic_arn}" \
                         --message "Deployment Status: ${status}\\nMessage: ${message}" \
                         --subject "Deployment ${status}: ${env.deployment_name}"
                 """
