@@ -66,7 +66,7 @@ pipeline {
         namespace = "bz-appy"
         sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:osher-nginx-deployment"
         git_repo_url = "https://github.com/beny1221g/k8s.git"
-        localHelmPath = "/tmp/nginx_bz/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz"
+        localHelmPath = "${WORKSPACE}/nginx-chart/nginx-chart-0.1.0.tgz" // Updated path to use Jenkins workspace
     }
 
     stages {
@@ -77,7 +77,7 @@ pipeline {
                     container('install-tools') {
                         sh '''
                         apt-get update
-                        apt-get install -y unzip curl git  # Ensure Git is installed
+                        apt-get install -y unzip curl git
 
                         # Install AWS CLI
                         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -100,76 +100,56 @@ pipeline {
             }
         }
 
-        stage('AWS Configure') {
-            steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                    credentialsId: 'aws']]) {
-                    script {
-                        container('install-tools') {
-                            // Use secure method to pass AWS credentials
-                            sh '''
-                                aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
-                                aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
-                                aws configure set region "$aws_region"
-                            '''
-                        }
-                    }
-                }
-            }
-        }
-
         stage('Generate Helm Chart') {
             steps {
                 container('install-tools') {
                     script {
                         echo "Creating necessary directories..."
                         sh '''
-                            mkdir -p /tmp/nginx_bz/k8s/nginx
+                            mkdir -p ${WORKSPACE}/nginx-chart
                             echo "Current directory contents:"
-                            ls -l /tmp/nginx_bz/k8s/nginx
+                            ls -l ${WORKSPACE}/nginx-chart
                         '''
                     }
                 }
             }
         }
 
-stage('Download Helm Chart') {
-    steps {
-        container('install-tools') {
-            script {
-                echo "Cloning repository for Helm chart..."
-                sh '''
-                    git clone ${git_repo_url} /tmp/nginx_bz/k8s/nginx
-                    echo "Contents of the directory after cloning:"
-                    ls -l /tmp/nginx_bz/k8s/nginx
+        stage('Download Helm Chart') {
+            steps {
+                container('install-tools') {
+                    script {
+                        echo "Cloning repository for Helm chart..."
+                        sh '''
+                            git clone ${git_repo_url} ${WORKSPACE}/nginx-chart
+                            echo "Contents of the directory after cloning:"
+                            ls -l ${WORKSPACE}/nginx-chart
 
-                    # Navigate to the expected Helm chart directory
-                    cd /tmp/nginx_bz/k8s/nginx/k8s/nginx-chart
+                            # Navigate to the expected Helm chart directory
+                            cd ${WORKSPACE}/nginx-chart/k8s/nginx-chart || { echo "Helm chart directory not found"; exit 1; }
 
-                    # Check if the Helm chart exists
-                    echo "Checking for Helm chart in the expected directory..."
-                    if [ -f "nginx-chart-0.1.0.tgz" ]; then
-                        echo "Helm chart found."
-                    else
-                        echo "Helm chart NOT found. Listing files in the directory:"
-                        ls -l
-                    fi
-                '''
+                            # Check if the Helm chart exists
+                            echo "Checking for Helm chart in the expected directory..."
+                            if [ -f "nginx-chart-0.1.0.tgz" ]; then
+                                echo "Helm chart found."
+                            else
+                                echo "Helm chart NOT found. Listing files in the directory:"
+                                ls -l
+                            fi
+                        '''
+                    }
+                }
             }
         }
-    }
-}
 
         stage('Deploy to Kubernetes') {
             steps {
                 container('install-tools') {
                     script {
                         echo "Attempting to install Helm chart from: ${localHelmPath}"
-                        echo "Checking contents of: /tmp/nginx_bz/k8s/nginx"
+                        echo "Checking contents of: ${WORKSPACE}/nginx-chart"
                         sh '''
-                            ls -l /tmp/nginx_bz/k8s/nginx
+                            ls -l ${WORKSPACE}/nginx-chart
                         '''
                         echo "Running Helm install command..."
                         sh '''
