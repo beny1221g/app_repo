@@ -108,7 +108,6 @@ pipeline {
                     accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                     secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
                     credentialsId: 'aws']]) {
-
                     script {
                         container('install-tools') {
                             sh """
@@ -128,9 +127,16 @@ pipeline {
                     if (!fileExists(env.helm_chart_path)) {
                         echo "Helm chart not found. Cloning from Git..."
                         sh """
-                            mkdir /tmp/nginx_bz
+                            mkdir -p /tmp/nginx_bz
                             git clone ${git_repo_url} /tmp/nginx_bz
+                            echo "Listing files in /tmp/nginx_bz to verify Helm chart location:"
+                            ls -R /tmp/nginx_bz
                         """
+
+                        // Check if the file exists at the expected path after cloning
+                        if (!fileExists(env.helm_chart_path)) {
+                            error "Helm chart file not found at ${env.helm_chart_path}. Please check the repository structure."
+                        }
                     } else {
                         echo "Helm chart found locally."
                     }
@@ -143,8 +149,6 @@ pipeline {
                 container('install-tools') {
                     script {
                         sh """
-
-
                             export HELM_DRIVER=configmap
                             helm install nginx-bz ${env.helm_chart_path} -n ${namespace} --kubeconfig ${kubeconfig_path}
                         """
@@ -153,6 +157,7 @@ pipeline {
             }
         }
     }
+
     post {
         success {
             echo "Deployment to EKS completed successfully."
