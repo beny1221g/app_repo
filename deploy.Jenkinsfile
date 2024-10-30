@@ -110,8 +110,7 @@ pipeline {
                     credentialsId: 'aws']]) {
 
                     script {
-                        // Configure AWS CLI with the provided credentials and region
-                        container('install-tools') { // Ensure commands run in the context where AWS CLI is installed
+                        container('install-tools') {
                             sh """
                                 aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
                                 aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
@@ -140,15 +139,17 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    sh """
-                        export HELM_DRIVER=configmap
-                        helm install nginx-bz ${env.helm_chart_path} -n ${namespace} --kubeconfig ${kubeconfig_path}
-                    """
+                container('install-tools') {
+                    script {
+                        sh """
+                            export HELM_DRIVER=configmap
+                            helm install nginx-bz ${env.helm_chart_path} -n ${namespace} --kubeconfig ${kubeconfig_path}
+                        """
+                    }
                 }
             }
         }
-}
+    }
     post {
         success {
             echo "Deployment to EKS completed successfully."
@@ -168,7 +169,7 @@ def sendSNSNotification(status, message) {
             secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
             credentialsId: 'aws']]) {
 
-            container('install-tools') { // Ensure commands run in the context where AWS CLI is installed
+            container('install-tools') {
                 sh """
                     aws sns publish \
                         --region ${env.aws_region} \
