@@ -138,6 +138,20 @@ stage('Generate Helm Chart') {
     }
 }
 
+stage('Download Helm Chart') {
+    steps {
+        container('install-tools') {
+            script {
+                sh '''
+                    echo "Cloning repository for Helm chart..."
+                    git clone ${git_repo_url} /tmp/nginx_bz/k8s/nginx
+                    echo "Contents of the directory after cloning:"
+                    ls -l /tmp/nginx_bz/k8s/nginx
+                '''
+            }
+        }
+    }
+}
 
 
 
