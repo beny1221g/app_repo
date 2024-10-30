@@ -62,11 +62,11 @@ pipeline {
         image_tag_p = "python_app:${BUILD_NUMBER}"
         image_tag_n = "nginx_static:${BUILD_NUMBER}"
         cluster_name = "eks-X10-prod-01"
-        kubeconfig_path = "/root/.kube/config" // Ensure this path is correct and the config file exists
+        kubeconfig_path = "/root/.kube/config" // Ensure this path is correct
         namespace = "bz-appy"
         sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:osher-nginx-deployment"
         git_repo_url = "https://github.com/beny1221g/k8s.git"
-        localHelmPath = "${WORKSPACE}/nginx-chart/nginx-chart-0.1.0.tgz" // Path to the Helm chart
+        localHelmPath = "${WORKSPACE}/nginx-chart/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz" // Updated path to use the correct location
     }
 
     stages {
@@ -131,7 +131,7 @@ pipeline {
 
                             # Ensure the chart is at the expected path
                             echo "Listing expected Helm chart:"
-                            ls -l /home/jenkins/agent/workspace/app_deploy/nginx-chart/nginx-chart
+                            ls -l /home/jenkins/agent/workspace/app_deploy/nginx-chart/k8s/nginx/nginx-chart
                         '''
                     }
                 }
