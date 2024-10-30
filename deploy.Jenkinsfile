@@ -128,6 +128,7 @@ pipeline {
                     if (!fileExists(env.helm_chart_path)) {
                         echo "Helm chart not found. Cloning from Git..."
                         sh """
+                            mkdir /tmp/nginx_bz
                             git clone ${git_repo_url} /tmp/nginx_bz
                         """
                     } else {
@@ -142,7 +143,7 @@ pipeline {
                 container('install-tools') {
                     script {
                         sh """
-                            ls /tmp/nginx_bz
+
 
                             export HELM_DRIVER=configmap
                             helm install nginx-bz ${env.helm_chart_path} -n ${namespace} --kubeconfig ${kubeconfig_path}
