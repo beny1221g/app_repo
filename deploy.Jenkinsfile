@@ -116,31 +116,36 @@ pipeline {
         }
 
         stage('Download Helm Chart') {
-            steps {
-                container('install-tools') {
-                    script {
-                        echo "Cloning repository for Helm chart..."
-                        sh '''
-                            git clone ${git_repo_url} ${WORKSPACE}/nginx-chart
-                            echo "Contents of the directory after cloning:"
-                            ls -l ${WORKSPACE}/nginx-chart
+    steps {
+        container('install-tools') {
+            script {
+                echo "Cloning repository for Helm chart..."
+                sh '''
+                    git clone ${git_repo_url} ${WORKSPACE}/nginx-chart
+                    echo "Contents of the directory after cloning:"
+                    ls -l ${WORKSPACE}/nginx-chart
 
-                            # Navigate to the expected Helm chart directory
-                            cd ${WORKSPACE}/nginx-chart/k8s/nginx-chart || { echo "Helm chart directory not found"; exit 1; }
+                    # Check the actual structure
+                    echo "Checking directory structure:"
+                    ls -R ${WORKSPACE}/nginx-chart
 
-                            # Check if the Helm chart exists
-                            echo "Checking for Helm chart in the expected directory..."
-                            if [ -f "nginx-chart-0.1.0.tgz" ]; then
-                                echo "Helm chart found."
-                            else
-                                echo "Helm chart NOT found. Listing files in the directory:"
-                                ls -l
-                            fi
-                        '''
-                    }
-                }
+                    # Navigate to the expected Helm chart directory
+                    cd ${WORKSPACE}/nginx-chart/k8s/nginx-chart || { echo "Helm chart directory not found"; exit 1; }
+
+                    # Check if the Helm chart exists
+                    echo "Checking for Helm chart in the expected directory..."
+                    if [ -f "nginx-chart-0.1.0.tgz" ]; then
+                        echo "Helm chart found."
+                    else
+                        echo "Helm chart NOT found. Listing files in the directory:"
+                        ls -l
+                    fi
+                '''
             }
         }
+    }
+}
+
 
         stage('Deploy to Kubernetes') {
             steps {
