@@ -59,10 +59,8 @@ pipeline {
         aws_region = "us-east-2"
         ecr_registry = "023196572641.dkr.ecr.us-east-2.amazonaws.com"
         ecr_repo = "${ecr_registry}/beny14/aws_repo"
-
         image_tag_p = "python_app:${BUILD_NUMBER}"
         image_tag_n = "nginx_static:${BUILD_NUMBER}"
-
         cluster_name = "eks-X10-prod-01"
         kubeconfig_path = "/root/.kube/config"
         namespace = "bz-appy"
@@ -79,7 +77,7 @@ pipeline {
                     container('install-tools') {
                         sh '''
                         apt-get update
-                        apt-get install -y unzip curl
+                        apt-get install -y unzip curl git  # Ensure Git is installed
 
                         # Install AWS CLI
                         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -108,7 +106,6 @@ pipeline {
                     accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                     secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
                     credentialsId: 'aws']]) {
-
                     script {
                         container('install-tools') {
                             sh """
@@ -122,64 +119,54 @@ pipeline {
             }
         }
 
-stage('Generate Helm Chart') {
-    steps {
-        container('install-tools') {
-            script {
-                // Example of creating directories and logging
-                sh """
-                    echo "Creating necessary directories..."
-                    mkdir -p /tmp/nginx_bz/k8s/nginx
-                    echo "Current directory contents:"
-                    ls -l /tmp/nginx_bz/k8s/nginx
-                """
+        stage('Generate Helm Chart') {
+            steps {
+                container('install-tools') {
+                    script {
+                        echo "Creating necessary directories..."
+                        sh '''
+                            mkdir -p /tmp/nginx_bz/k8s/nginx
+                            echo "Current directory contents:"
+                            ls -l /tmp/nginx_bz/k8s/nginx
+                        '''
+                    }
+                }
             }
         }
-    }
-}
 
-stage('Download Helm Chart') {
-    steps {
-        container('install-tools') {
-            script {
-                sh '''
-                    echo "Cloning repository for Helm chart..."
-                    git clone ${git_repo_url} /tmp/nginx_bz/k8s/nginx
-                    echo "Contents of the directory after cloning:"
-                    ls -l /tmp/nginx_bz/k8s/nginx
-                '''
+        stage('Download Helm Chart') {
+            steps {
+                container('install-tools') {
+                    script {
+                        echo "Cloning repository for Helm chart..."
+                        sh '''
+                            git clone ${git_repo_url} /tmp/nginx_bz/k8s/nginx
+                            echo "Contents of the directory after cloning:"
+                            ls -l /tmp/nginx_bz/k8s/nginx
+                        '''
+                    }
+                }
             }
         }
-    }
-}
 
-
-
-stage('Deploy to Kubernetes') {
-    steps {
-        container('install-tools') {
-            script {
-                // Debugging output to check if the localHelmPath is correct
-                echo "Attempting to install Helm chart from: ${localHelmPath}"
-
-                // Check the directory containing the Helm chart
-                sh """
-                    echo "Checking contents of: /tmp/nginx_bz/k8s/nginx"
-                    ls -l /tmp/nginx_bz/k8s/nginx
-                """
-
-                // Proceed with Helm installation
-                echo "Running Helm install command..."
-                sh """
-                    export HELM_DRIVER=configmap
-                    helm install nginx-bz "${localHelmPath}" -n "${namespace}" --kubeconfig "${kubeconfig_path}"
-                """
+        stage('Deploy to Kubernetes') {
+            steps {
+                container('install-tools') {
+                    script {
+                        echo "Attempting to install Helm chart from: ${localHelmPath}"
+                        echo "Checking contents of: /tmp/nginx_bz/k8s/nginx"
+                        sh '''
+                            ls -l /tmp/nginx_bz/k8s/nginx
+                        '''
+                        echo "Running Helm install command..."
+                        sh '''
+                            export HELM_DRIVER=configmap
+                            helm install nginx-bz "${localHelmPath}" -n "${namespace}" --kubeconfig "${kubeconfig_path}"
+                        '''
+                    }
+                }
             }
         }
-    }
-}
-
-
     }
 
     post {
@@ -200,7 +187,6 @@ def sendSNSNotification(status, message) {
             accessKeyVariable: 'AWS_ACCESS_KEY_ID',
             secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
             credentialsId: 'aws']]) {
-
             container('install-tools') {
                 sh """
                     aws sns publish \
