@@ -122,33 +122,10 @@ pipeline {
             }
         }
 
-        stage('Fetch Helm Chart') {
-            steps {
-                script {
-                    if (!fileExists(localHelmPath)) {
-                        echo "Helm chart not found. Cloning from Git..."
-                        sh """
-                            mkdir -p /tmp/nginx_bz
-                            git clone ${git_repo_url} /tmp/nginx_bz
-                            echo "Listing files in /tmp/nginx_bz/k8s/nginx/nginx-chart to confirm path:"
-                            ls -R /tmp/nginx_bz/k8s/nginx/nginx-chart
-                        """
-
-                        // Check if the file exists at the expected path after cloning
-                        if (!fileExists(localHelmPath)) {
-                            error "Helm chart file not found at ${localHelmPath}. Please check the repository structure."
-                        }
-                    } else {
-                        echo "Helm chart found locally at ${localHelmPath}."
-                    }
-                }
-            }
-        }
-
         stage('Deploy to Kubernetes') {
-         steps {
-         container('install-tools') {
-             script {
+        steps {
+        container('install-tools') {
+            script {
                 // Define the correct local path to the Helm chart
                 def localHelmPath = '/tmp/nginx_bz/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz'
 
@@ -171,6 +148,9 @@ pipeline {
         }
     }
 }
+
+    }
+
 
 
     post {
