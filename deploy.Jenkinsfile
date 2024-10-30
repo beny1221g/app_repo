@@ -149,15 +149,18 @@ pipeline {
             steps {
                 container('install-tools') {
                     script {
-                        sh """
-                            export HELM_DRIVER=configmap
-                            helm install nginx-bz ${localHelmPath} -n ${namespace} --kubeconfig ${kubeconfig_path}
-                        """
-                    }
-                }
-            }
-        }
-    }
+                         echo "Attempting to install Helm chart from: ${localHelmPath}"
+                         sh """
+                         ls -l ${localHelmPath}  # Check if the file exists
+                         export HELM_DRIVER=configmap
+                         helm install nginx-bz ${localHelmPath} -n ${namespace} --kubeconfig ${kubeconfig_path}
+                            """
+                           }
+                                           }
+                                      }
+                  }
+
+                                      }
 
     post {
         success {
