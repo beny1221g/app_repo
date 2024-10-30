@@ -64,11 +64,11 @@ pipeline {
         image_tag_n = "nginx_static:${BUILD_NUMBER}"
 
         cluster_name = "eks-X10-prod-01"
-        kubeconfig_path = "~/.kube/config"
+        kubeconfig_path = "/root/.kube/config"
         namespace = "bz-appy"
         sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:osher-nginx-deployment"
-        helm_chart_path = "/tmp/nginx_bz/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz"
         git_repo_url = "https://github.com/beny1221g/k8s.git"
+        localHelmPath = "/tmp/nginx_bz/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz"
     }
 
     stages {
@@ -108,6 +108,7 @@ pipeline {
                     accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                     secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
                     credentialsId: 'aws']]) {
+
                     script {
                         container('install-tools') {
                             sh """
@@ -124,21 +125,21 @@ pipeline {
         stage('Fetch Helm Chart') {
             steps {
                 script {
-                    if (!fileExists(env.helm_chart_path)) {
+                    if (!fileExists(localHelmPath)) {
                         echo "Helm chart not found. Cloning from Git..."
                         sh """
                             mkdir -p /tmp/nginx_bz
                             git clone ${git_repo_url} /tmp/nginx_bz
-                            echo "Listing files in /tmp/nginx_bz to verify Helm chart location:"
-                            ls -R /tmp/nginx_bz
+                            echo "Listing files in /tmp/nginx_bz/k8s/nginx/nginx-chart to confirm path:"
+                            ls -R /tmp/nginx_bz/k8s/nginx/nginx-chart
                         """
 
                         // Check if the file exists at the expected path after cloning
-                        if (!fileExists(env.helm_chart_path)) {
-                            error "Helm chart file not found at ${env.helm_chart_path}. Please check the repository structure."
+                        if (!fileExists(localHelmPath)) {
+                            error "Helm chart file not found at ${localHelmPath}. Please check the repository structure."
                         }
                     } else {
-                        echo "Helm chart found locally."
+                        echo "Helm chart found locally at ${localHelmPath}."
                     }
                 }
             }
@@ -150,7 +151,7 @@ pipeline {
                     script {
                         sh """
                             export HELM_DRIVER=configmap
-                            helm install nginx-bz ${env.helm_chart_path} -n ${namespace} --kubeconfig ${kubeconfig_path}
+                            helm install nginx-bz ${localHelmPath} -n ${namespace} --kubeconfig ${kubeconfig_path}
                         """
                     }
                 }
