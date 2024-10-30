@@ -156,13 +156,15 @@ stage('Deploy to Kubernetes') {
 
                 // Update the Helm install command
                 sh '''
+                    export KUBECONFIG=/root/.kube/config  # Adjust the path as necessary
                     export HELM_DRIVER=configmap
-                    helm install nginx-bz /home/jenkins/agent/workspace/app_deploy/nginx-chart/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz -n bz-appy --kubeconfig /root/.kube/config
+                    helm install nginx-bz /home/jenkins/agent/workspace/app_deploy/nginx-chart/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz -n bz-appy
                 '''
             }
         }
     }
 }
+
 
     }
 
