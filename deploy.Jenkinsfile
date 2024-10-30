@@ -123,28 +123,29 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            steps {
-                container('install-tools') {
-                    script {
-                        // Check if the file exists
-                        echo "Attempting to install Helm chart from: ${localHelmPath}"
+    steps {
+        container('install-tools') {
+            script {
+                // Check if the file exists
+                echo "Attempting to install Helm chart from: ${localHelmPath}"
 
-                        // List the contents of the directory to verify the file exists
-                        sh """
-                            echo "Listing files in directory: $(dirname "${localHelmPath}")"
-                            ls -l $(dirname "${localHelmPath}")  # Show the directory listing where the chart is located
-                        """
+                // List the contents of the directory to verify the file exists
+                sh """
+                    echo "Listing files in directory: \$(dirname "${localHelmPath}")"
+                    ls -l \$(dirname "${localHelmPath}")  # Show the directory listing where the chart is located
+                """
 
-                        // Proceed with Helm installation
-                        echo "Running Helm install command..."
-                        sh """
-                            export HELM_DRIVER=configmap
-                            helm install nginx-bz "${localHelmPath}" -n "${namespace}" --kubeconfig "${kubeconfig_path}"
-                        """
-                    }
-                }
+                // Proceed with Helm installation
+                echo "Running Helm install command..."
+                sh """
+                    export HELM_DRIVER=configmap
+                    helm install nginx-bz "${localHelmPath}" -n "${namespace}" --kubeconfig "${kubeconfig_path}"
+                """
             }
         }
+        }
+    }
+
     }
 
     post {
