@@ -148,24 +148,22 @@ stage('Download Helm Chart') {
 
 
 
-        stage('Deploy to Kubernetes') {
-            steps {
-                container('install-tools') {
-                    script {
-                        echo "Attempting to install Helm chart from: ${localHelmPath}"
-                        echo "Checking contents of: ${WORKSPACE}/nginx-chart"
-                        sh '''
-                            ls -l ${WORKSPACE}/nginx-chart
-                        '''
-                        echo "Running Helm install command..."
-                        sh '''
-                            export HELM_DRIVER=configmap
-                            helm install nginx-bz "${localHelmPath}" -n "${namespace}" --kubeconfig "${kubeconfig_path}"
-                        '''
-                    }
-                }
+stage('Deploy to Kubernetes') {
+    steps {
+        container('install-tools') {
+            script {
+                echo "Attempting to install Helm chart from: /home/jenkins/agent/workspace/app_deploy/nginx-chart/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz"
+
+                // Update the Helm install command
+                sh '''
+                    export HELM_DRIVER=configmap
+                    helm install nginx-bz /home/jenkins/agent/workspace/app_deploy/nginx-chart/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz -n bz-appy --kubeconfig /root/.kube/config
+                '''
             }
         }
+    }
+}
+
     }
 
     post {
