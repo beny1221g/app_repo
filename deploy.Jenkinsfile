@@ -122,6 +122,25 @@ pipeline {
             }
         }
 
+stage('Generate Helm Chart') {
+    steps {
+        container('install-tools') {
+            script {
+                // Example of creating directories and logging
+                sh """
+                    echo "Creating necessary directories..."
+                    mkdir -p /tmp/nginx_bz/k8s/nginx
+                    echo "Current directory contents:"
+                    ls -l /tmp/nginx_bz/k8s/nginx
+                """
+            }
+        }
+    }
+}
+
+
+
+
 stage('Deploy to Kubernetes') {
     steps {
         container('install-tools') {
