@@ -146,21 +146,32 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            steps {
-                container('install-tools') {
-                    script {
-                         echo "Attempting to install Helm chart from: ${localHelmPath}"
-                         sh """
-                         ls -l ${localHelmPath}  # Check if the file exists
-                         export HELM_DRIVER=configmap
-                         helm install nginx-bz ${localHelmPath} -n ${namespace} --kubeconfig ${kubeconfig_path}
-                            """
-                           }
-                                           }
-                                      }
-                  }
+         steps {
+         container('install-tools') {
+             script {
+                // Define the correct local path to the Helm chart
+                def localHelmPath = '/tmp/nginx_bz/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz'
 
-                                      }
+                // Check if the file exists
+                echo "Attempting to install Helm chart from: ${localHelmPath}"
+
+                // List the contents of the directory to verify the file exists
+                sh """
+                    echo "Listing files in directory: $(dirname ${localHelmPath})"
+                    ls -l $(dirname ${localHelmPath})  # Show the directory listing where the chart is located
+                """
+
+                // Proceed with Helm installation
+                echo "Running Helm install command..."
+                sh """
+                    export HELM_DRIVER=configmap
+                    helm install nginx-bz ${localHelmPath} -n ${namespace} --kubeconfig ${kubeconfig_path}
+                """
+            }
+        }
+    }
+}
+
 
     post {
         success {
