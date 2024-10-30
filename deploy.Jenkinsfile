@@ -134,20 +134,30 @@ pipeline {
             }
         }
 
-        stage('Download Helm Chart') {
-            steps {
-                container('install-tools') {
-                    script {
-                        echo "Cloning repository for Helm chart..."
-                        sh '''
-                            git clone ${git_repo_url} /tmp/nginx_bz/k8s/nginx
-                            echo "Contents of the directory after cloning:"
-                            ls -l /tmp/nginx_bz/k8s/nginx
-                        '''
-                    }
-                }
+stage('Download Helm Chart') {
+    steps {
+        container('install-tools') {
+            script {
+                echo "Cloning repository for Helm chart..."
+                sh '''
+                    git clone ${git_repo_url} /tmp/nginx_bz/k8s/nginx
+                    echo "Contents of the directory after cloning:"
+                    ls -l /tmp/nginx_bz/k8s/nginx
+
+                    # Check if the Helm chart exists
+                    echo "Checking for Helm chart in the expected directory..."
+                    if [ -f "/tmp/nginx_bz/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz" ]; then
+                        echo "Helm chart found."
+                    else
+                        echo "Helm chart NOT found. Listing files in the directory:"
+                        ls -l /tmp/nginx_bz/k8s/nginx/nginx-chart
+                    fi
+                '''
             }
         }
+    }
+}
+
 
         stage('Deploy to Kubernetes') {
             steps {
