@@ -151,7 +151,7 @@ pipeline {
                             # Check if the release already exists
                             if helm ls -n ${namespace} | grep -q nginx-bz; then
                                 echo "Release nginx-bz already exists. Attempting to upgrade..."
-                                helm upgrade --install nginx-bz ${localHelmPath} -n ${namespace} --set rbac.create=false
+                                helm upgrade nginx-bz ${localHelmPath} -n ${namespace} --set rbac.create=false
                             else
                                 echo "Installing new release nginx-bz..."
                                 helm install nginx-bz ${localHelmPath} -n ${namespace}
