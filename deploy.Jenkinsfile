@@ -51,9 +51,9 @@ pipeline {
         timeout(time: 5, unit: 'MINUTES')
     }
 
-    parameters {
-        string(name: 'JENKINS_AGENT_SECRET', defaultValue: '', description: 'Jenkins Agent Secret')
-    }
+//     parameters {
+//         string(name: 'JENKINS_AGENT_SECRET', defaultValue: '', description: 'Jenkins Agent Secret')
+//     }
 
     environment {
         aws_region = "us-east-2"
@@ -136,6 +136,17 @@ pipeline {
                     }
                 }
             }
+        }
+        stage('adding pvc-access'){
+               sh '''
+               kubectl annotate role pvc-access meta.helm.sh/release-name=nginx-bz \
+               meta.helm.sh/release-namespace=bz-appy -n bz-appy
+               kubectl label role pvc-access app.kubernetes.io/managed-by=Helm -n bz-appy
+
+               kubectl annotate rolebinding jenkins-pvc-access meta.helm.sh/release-name=nginx-bz \
+               meta.helm.sh/release-namespace=bz-appy -n bz-appy
+               kubectl label rolebinding jenkins-pvc-access app.kubernetes.io/managed-by=Helm -n bz-appy
+               '''
         }
 
         stage('Deploy to Kubernetes') {
