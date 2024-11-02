@@ -3,6 +3,8 @@ kind: RoleBinding
 metadata:
   name: jenkins-pvc-access
   namespace: bz-appy
+  annotations:
+    "helm.sh/hook": "pre-install"
 subjects:
 - kind: ServiceAccount
   name: default
