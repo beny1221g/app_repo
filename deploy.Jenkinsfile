@@ -146,8 +146,8 @@ pipeline {
 
                         // Update the Helm install command
                         sh '''
-//                             export KUBECONFIG=${kubeconfig_path}  # Adjust the path as necessary
-//                             export HELM_DRIVER=configmap
+                            export KUBECONFIG=${kubeconfig_path}  # Adjust the path as necessary
+                            export HELM_DRIVER=configmap
 
                             # Check if the release already exists
                             if helm ls -n ${namespace} | grep -q nginx-bz; then
