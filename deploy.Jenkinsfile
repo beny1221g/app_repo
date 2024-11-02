@@ -138,20 +138,25 @@ pipeline {
             }
         }
 
-        stage('adding pvc-access'){
-            steps {
+        stage('adding pvc-access') {
+           steps {
+               container('install-tools') {
+                  script {
+                    echo "Annotating and labeling Role and RoleBinding for Helm management..."
+                    sh '''
+                    kubectl annotate role pvc-access meta.helm.sh/release-name=nginx-bz \
+                    meta.helm.sh/release-namespace=bz-appy -n bz-appy --overwrite
+                    kubectl label role pvc-access app.kubernetes.io/managed-by=Helm -n bz-appy --overwrite
 
-               sh '''
-               kubectl annotate role pvc-access meta.helm.sh/release-name=nginx-bz \
-               meta.helm.sh/release-namespace=bz-appy -n bz-appy
-               kubectl label role pvc-access app.kubernetes.io/managed-by=Helm -n bz-appy
-
-               kubectl annotate rolebinding jenkins-pvc-access meta.helm.sh/release-name=nginx-bz \
-               meta.helm.sh/release-namespace=bz-appy -n bz-appy
-               kubectl label rolebinding jenkins-pvc-access app.kubernetes.io/managed-by=Helm -n bz-appy
-               '''
-            }
+                    kubectl annotate rolebinding jenkins-pvc-access meta.helm.sh/release-name=nginx-bz \
+                    meta.helm.sh/release-namespace=bz-appy -n bz-appy --overwrite
+                    kubectl label rolebinding jenkins-pvc-access app.kubernetes.io/managed-by=Helm -n bz-appy --overwrite
+                    '''
+                    }
+                 }
+           }
         }
+
 
         stage('Deploy to Kubernetes') {
             steps {
