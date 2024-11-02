@@ -2,13 +2,28 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nginx-service
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.deployment.namespace }}
 spec:
   selector:
-    app: nginx
+    app: {{ .Values.appName }}
   ports:
     - protocol: TCP
-      port: 80  # Use port 80 if you want standard HTTP traffic
-      targetPort: 80
-      nodePort: {{ .Values.nginx.service.nodePort | default 30002 }}
+      port: {{ .Values.container.port }}  # Use the container port from values
+      targetPort: {{ .Values.container.port }}
+      nodePort: 30000  # Use nodePort from values
   type: NodePort
+
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: nginx-service
+#  namespace: {{ .Values.namespace }}
+#spec:
+#  selector:
+#    app: nginx
+#  ports:
+#    - protocol: TCP
+#      port: 80
+#      targetPort: 80
+#      nodePort: {{ .Values.nginx.service.nodePort | default 30002 }}
+#  type: NodePort

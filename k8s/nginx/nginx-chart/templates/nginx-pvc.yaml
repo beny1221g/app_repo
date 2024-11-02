@@ -1,12 +1,25 @@
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
-  name: pvc-access
-  namespace: bz-appy
-rules:
-  - apiGroups: [""]
-    resources: ["persistentvolumeclaims"]
-    verbs: ["get", "list"]
-  - apiGroups: ["rbac.authorization.k8s.io"]
-    resources: ["roles"]
-    verbs: ["patch", "update"]
+  name: {{ .Values.pvc.name }}
+  namespace: {{ .Release.Namespace }}   # Set namespace properly
+spec:
+  accessModes:
+    {{- range .Values.pvc.accessModes }}
+    - {{ . }}
+    {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.pvc.resources.requests.storage }}
+
+#apiVersion: v1
+#kind: PersistentVolumeClaim
+#metadata:
+#  name: nginx-pvc
+#  namespace: {{ .Values.namespace }}
+#spec:
+#  accessModes: {{ .Values.pvc.accessModes }}
+#  resources:
+#    requests:
+#      storage: {{ .Values.nginx.pvc.storage }}
+#  storageClassName: {{ .Values.pvc.storageClassName }}

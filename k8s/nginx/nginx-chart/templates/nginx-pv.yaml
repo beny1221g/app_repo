@@ -2,12 +2,11 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: nginx-pv
-  namespace: bz-appy  # Ensure the namespace matches the PVC namespace
+  namespace: {{ .Values.namespace }}  # Use dynamic namespace from values.yaml
 spec:
   capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: standard
+    storage: {{ .Values.pv.capacity }}
+  accessModes: {{ .Values.pvc.accessModes }}
+  storageClassName: {{ .Values.pvc.storageClassName }}
   hostPath:
-    path: /home/bz/Desktop/kube_repo/k8s/nginx/nginx-chart/templates/nginx-pvc.yaml  # Update the path if needed
+    path: /home/bz/Desktop/kube_repo/k8s/nginx/nginx-chart/templates/nginx-pvc.yaml  # Update as needed

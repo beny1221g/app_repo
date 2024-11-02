@@ -1,15 +1,15 @@
+{{- if .Values.rbac.enabled }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: jenkins-pvc-access
-  namespace: bz-appy
-  annotations:
-    "helm.sh/hook": "pre-install"
+  name: {{ .Values.rbac.roleBinding.name }}
+  namespace: {{ .Values.namespace }}
 subjects:
 - kind: ServiceAccount
   name: default
   namespace: bz-jenkins
 roleRef:
   kind: Role
-  name: pvc-access
+  name: {{ .Values.rbac.role.name }}
   apiGroup: rbac.authorization.k8s.io
+{{- end }}

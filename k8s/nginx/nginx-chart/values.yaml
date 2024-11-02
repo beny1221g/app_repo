@@ -1,15 +1,98 @@
-# For Nginx
-namespace: bz-appy
-nginx:
-  replicas: 1
-  image: beny14/nginx_static:latest
-  service:
-    nodePort: 30000
-  hpa:
-    minReplicas: 1
-    maxReplicas: 2
-    targetCPUUtilizationPercentage: 50
-  ingress:
-    host: nginx.local  # Ensure this is set correctly
-  pvc:
-    storage: 20Gi
+# Storage settings for Persistent Volume Claim
+pvc:
+  name: nginx-pvc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi  # Adjusted to match your requirement
+  storageClassName: standard  # Specify if you have a specific storage class
+
+# Deployment configuration
+deployment:
+  name: nginx-deployment
+  replicas: 3
+  namespace: bz-appy  # Specify the namespace for deployment
+
+# Application name and container configuration
+appName: nginx
+container:
+  name: nginx
+  port: 80  # Container port
+
+# Docker image settings
+image:
+  repository: beny14/nginx_static  # Image repository without tag
+  tag: latest  # Tag of the image
+
+# Resource limits and requests
+resources:
+  requests:
+    memory: 64Mi
+    cpu: 250m
+  limits:
+    memory: 128Mi
+    cpu: 500m
+
+# Volume settings for mounting
+volume:
+  mountPath: /var/www/html  # Path where the volume will be mounted
+
+# Horizontal Pod Autoscaler settings
+hpa:
+  minReplicas: 2
+  maxReplicas: 5
+  averageUtilization: 50
+
+# Ingress settings
+ingress:
+  host: nginx.local  # Ingress host
+
+# NGINX Service settings
+service:
+  nodePort: 30000  # Ensure this is defined
+
+# RBAC settings
+rbac:
+  enabled: true  # Enable or disable RBAC
+  role:
+    name: pvc-access  # Name of the Role to bind
+  roleBinding:
+    name: jenkins-pvc-access  # Name of the RoleBinding
+
+# Persistent Volume settings (optional)
+pv:
+  enabled: true  # Whether to create a PV
+  capacity: 10Gi  # Adjust as needed
+
+## For Nginx
+#namespace: bz-appy
+#nginx:
+#  replicas: 1
+#  image: beny14/nginx_static:latest
+#  service:
+#    nodePort: 30000
+#  hpa:
+#    minReplicas: 1
+#    maxReplicas: 2
+#    targetCPUUtilizationPercentage: 50
+#  ingress:
+#    host: nginx.local  # Ensure this is set correctly
+#  pvc:
+#    storage: 10Gi
+#
+#pvc:
+#  accessModes:
+#    - ReadWriteOnce
+#  storageClassName: standard
+#
+#rbac:
+#  enabled: true
+#  role:
+#    name: pvc-access
+#  roleBinding:
+#    name: jenkins-pvc-access
+#
+#pv:
+#  enabled: true
+#  capacity: 10Gi

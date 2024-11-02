@@ -1,27 +1,119 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment
-  namespace: {{ .Values.namespace }}
+  name: {{ .Values.deployment.name }}
+  namespace: {{ .Release.Namespace }}
 spec:
-  replicas: {{ .Values.nginx.replicas }}
+  replicas: {{ .Values.deployment.replicas }}
   selector:
     matchLabels:
-      app: nginx
+      app: {{ .Values.appName }}
   template:
     metadata:
       labels:
-        app: nginx
+        app: {{ .Values.appName }}
     spec:
       containers:
-      - name: nginx
-        image: {{ .Values.nginx.image }}
+      - name: {{ .Values.container.name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         ports:
-        - containerPort: 80  # This should match your service port
+        - containerPort: {{ .Values.container.port }}
+        resources:
+          requests:
+            memory: "{{ .Values.resources.requests.memory }}"
+            cpu: "{{ .Values.resources.requests.cpu }}"
+          limits:
+            memory: "{{ .Values.resources.limits.memory }}"
+            cpu: "{{ .Values.resources.limits.cpu }}"
         volumeMounts:
-        - mountPath: /usr/share/nginx/html
-          name: nginx-storage
+        - name: nginx-data
+          mountPath: {{ .Values.volume.mountPath }}
       volumes:
-      - name: nginx-storage
+      - name: nginx-data
         persistentVolumeClaim:
-          claimName: nginx-pvc
+          claimName: {{ .Values.pvc.name }}   # Correctly referencing the PVC
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.deployment.name }}-hpa
+  namespace: {{ .Release.Namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.deployment.name }}
+  minReplicas: {{ .Values.hpa.minReplicas }}
+  maxReplicas: {{ .Values.hpa.maxReplicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.hpa.averageUtilization }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.deployment.name }}-service
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: {{ .Values.appName }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.container.port }}
+      targetPort: {{ .Values.container.port }}
+  type: NodePort
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.deployment.name }}-ingress
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: ubuntu.myguest.virtualbox.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Values.deployment.name }}-service
+            port:
+              number: {{ .Values.container.port }}
+
+#apiVersion: apps/v1
+#kind: Deployment
+#metadata:
+#  name: nginx-deployment
+#  namespace: {{ .Values.namespace }}
+#spec:
+#  replicas: {{ .Values.nginx.replicas }}
+#  selector:
+#    matchLabels:
+#      app: nginx
+#  template:
+#    metadata:
+#      labels:
+#        app: nginx
+#    spec:
+#      containers:
+#      - name: nginx
+#        image: {{ .Values.nginx.image }}
+#        ports:
+#        - containerPort: 80
+#        volumeMounts:
+#        - mountPath: /usr/share/nginx/html
+#          name: nginx-storage
+#      volumes:
+#      - name: nginx-storage
+#        persistentVolumeClaim:
+#          claimName: nginx-pvc
