@@ -10,5 +10,5 @@ rules:
   resources: ["persistentvolumeclaims"]
   verbs: ["get", "list"]
 - apiGroups: ["rbac.authorization.k8s.io"]
-  resources: ["roles"]
+  resources: ["roles" , "secrets"]
   verbs: ["patch"]
