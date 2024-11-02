@@ -146,13 +146,13 @@ pipeline {
 
                         // Update the Helm install command
                         sh '''
-                            export KUBECONFIG=${kubeconfig_path}  # Adjust the path as necessary
-                            export HELM_DRIVER=configmap
+//                             export KUBECONFIG=${kubeconfig_path}  # Adjust the path as necessary
+//                             export HELM_DRIVER=configmap
 
                             # Check if the release already exists
                             if helm ls -n ${namespace} | grep -q nginx-bz; then
                                 echo "Release nginx-bz already exists. Attempting to upgrade..."
-                                helm upgrade nginx-bz ${localHelmPath} -n ${namespace} --install
+                                helm upgrade --install nginx-bz ${localHelmPath} -n ${namespace} --set rbac.create=false
                             else
                                 echo "Installing new release nginx-bz..."
                                 helm install nginx-bz ${localHelmPath} -n ${namespace}
