@@ -137,7 +137,10 @@ pipeline {
                 }
             }
         }
+
         stage('adding pvc-access'){
+            steps {
+
                sh '''
                kubectl annotate role pvc-access meta.helm.sh/release-name=nginx-bz \
                meta.helm.sh/release-namespace=bz-appy -n bz-appy
@@ -147,6 +150,7 @@ pipeline {
                meta.helm.sh/release-namespace=bz-appy -n bz-appy
                kubectl label rolebinding jenkins-pvc-access app.kubernetes.io/managed-by=Helm -n bz-appy
                '''
+            }
         }
 
         stage('Deploy to Kubernetes') {
