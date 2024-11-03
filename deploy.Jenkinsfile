@@ -62,7 +62,7 @@ pipeline {
         namespace = "bz-appy"  // Kubernetes namespace for deployment
         sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:deploy_bz"  // SNS topic for notifications
         git_repo_url = "https://github.com/beny1221g/k8s.git"  // Git repository URL for Helm charts
-        localHelmPath = "${WORKSPACE}/nginx-chart/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz"  // Path to Helm chart package
+        localHelmPath = "${WORKSPACE}/nginx-chart/k8s/nginx/nginx-chart"  // Path to Helm chart package
     }
 
     stages {
@@ -135,49 +135,14 @@ pipeline {
                         echo "Deploying Helm chart to Kubernetes namespace: ${namespace}"
                         sh '''
                                 echo "Release nginx-bz exists; upgrading..."
-                                helm upgrade --install nginx-bz ${localHelmPath} -n ${namespace} --set rbac.create=false
+                                helm upgrade --install nginx-bz ${localHelmPath} -n ${namespace}
                         '''
                     }
                 }
             }
         }
 
-        stage('Verify Helm Deployment') {
-            steps {
-                container('install-tools') {
-                    script {
-                        echo "Ensuring Helm has deployed all resources correctly"
-                        sh '''
-                            # Wait until the pvc-access role exists in Kubernetes
-                            until kubectl get role pvc-access -n ${namespace}; do
-                                echo "Waiting for pvc-access role to be available..."
-                                sleep 5
-                            done
-                        '''
-                    }
-                }
-            }
-        }
 
-        stage('Add Annotations to pvc-access') {
-            steps {
-                container('install-tools') {
-                    script {
-                        echo "Annotating and labeling Role and RoleBinding for Helm management"
-                        sh '''
-                            # Add annotations and labels to role and rolebinding
-                            kubectl annotate role pvc-access meta.helm.sh/release-name=nginx-bz \
-                            meta.helm.sh/release-namespace=${namespace} -n ${namespace} --overwrite
-                            kubectl label role pvc-access app.kubernetes.io/managed-by=Helm -n ${namespace} --overwrite
-
-                            kubectl annotate rolebinding jenkins-pvc-access meta.helm.sh/release-name=nginx-bz \
-                            meta.helm.sh/release-namespace=${namespace} -n ${namespace} --overwrite
-                            kubectl label rolebinding jenkins-pvc-access app.kubernetes.io/managed-by=Helm -n ${namespace} --overwrite
-                        '''
-                    }
-                }
-            }
-        }
     }
 
     post {
