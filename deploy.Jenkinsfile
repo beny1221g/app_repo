@@ -135,7 +135,7 @@ pipeline {
                         echo "Deploying Helm chart to Kubernetes namespace: ${namespace}"
                         sh '''
                                 echo "Release nginx-bz exists; upgrading..."
-                                helm upgrade --install nginx-bz ${localHelmPath} -n ${namespace}
+                                helm upgrade --install nginx-bz ${localHelmPath} -n ${namespace} --kubeconfig ${kubeconfig_path}
                         '''
                     }
                 }
