@@ -51,10 +51,6 @@ pipeline {
         timeout(time: 5, unit: 'MINUTES')
     }
 
-//     parameters {
-//         string(name: 'JENKINS_AGENT_SECRET', defaultValue: '', description: 'Jenkins Agent Secret')
-//     }
-
     environment {
         aws_region = "us-east-2"
         ecr_registry = "023196572641.dkr.ecr.us-east-2.amazonaws.com"
@@ -79,21 +75,36 @@ pipeline {
                         apt-get update
                         apt-get install -y unzip curl git
 
-                        # Install AWS CLI
-                        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                        unzip awscliv2.zip
-                        ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
+                        # Check and install AWS CLI
+                        if ! command -v aws &> /dev/null; then
+                            echo "Installing AWS CLI"
+                            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                            unzip awscliv2.zip
+                            ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
+                        else
+                            echo "AWS CLI already installed"
+                        fi
 
-                        # Install kubectl
-                        curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
-                        chmod +x kubectl
-                        mv kubectl /usr/local/bin/
+                        # Check and install kubectl
+                        if ! command -v kubectl &> /dev/null; then
+                            echo "Installing kubectl"
+                            curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+                            chmod +x kubectl
+                            mv kubectl /usr/local/bin/
+                        else
+                            echo "kubectl already installed"
+                        fi
 
-                        # Install Helm
-                        curl -LO https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz
-                        tar -zxvf helm-v3.9.0-linux-amd64.tar.gz
-                        mv linux-amd64/helm /usr/local/bin/
-                        chmod +x /usr/local/bin/helm
+                        # Check and install Helm
+                        if ! command -v helm &> /dev/null; then
+                            echo "Installing Helm"
+                            curl -LO https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz
+                            tar -zxvf helm-v3.9.0-linux-amd64.tar.gz
+                            mv linux-amd64/helm /usr/local/bin/
+                            chmod +x /usr/local/bin/helm
+                        else
+                            echo "Helm already installed"
+                        fi
                         '''
                     }
                 }
@@ -124,21 +135,13 @@ pipeline {
                             git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/nginx-chart
                             echo "Contents of the directory after cloning:"
                             ls -l /home/jenkins/agent/workspace/app_deploy/nginx-chart
-
-                            # Check the actual structure
-                            echo "Checking directory structure:"
-                            ls -R /home/jenkins/agent/workspace/app_deploy/nginx-chart
-
-                            # Ensure the chart is at the expected path
-                            echo "Listing expected Helm chart:"
-                            ls -l /home/jenkins/agent/workspace/app_deploy/nginx-chart/k8s/nginx/nginx-chart
                         '''
                     }
                 }
             }
         }
 
-        stage('adding pvc-access') {
+        stage('Adding pvc-access') {
            steps {
                container('install-tools') {
                   script {
@@ -157,18 +160,13 @@ pipeline {
            }
         }
 
-
         stage('Deploy to Kubernetes') {
             steps {
                 container('install-tools') {
                     script {
                         echo "Attempting to install Helm chart from: ${localHelmPath}"
 
-                        // Update the Helm install command
                         sh '''
-
-
-                            # Check if the release already exists
                             if helm ls -n ${namespace} | grep -q nginx-bz; then
                                 echo "Release nginx-bz already exists. Attempting to upgrade..."
                                 helm upgrade --install nginx-bz ${localHelmPath} -n ${namespace} --set rbac.create=false
