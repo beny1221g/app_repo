@@ -134,14 +134,8 @@ pipeline {
                     script {
                         echo "Deploying Helm chart to Kubernetes namespace: ${namespace}"
                         sh '''
-                            # Check if the Helm release already exists
-                            if helm ls -n ${namespace} | grep -q nginx-bz; then
                                 echo "Release nginx-bz exists; upgrading..."
                                 helm upgrade --install nginx-bz ${localHelmPath} -n ${namespace} --set rbac.create=false
-                            else
-                                echo "Installing new release nginx-bz..."
-                                helm install nginx-bz ${localHelmPath} -n ${namespace}
-                            fi
                         '''
                     }
                 }
