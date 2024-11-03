@@ -49,8 +49,8 @@ ingress:
   host: nginx.local  # Ingress host
 
 # NGINX Service settings
-service:
-  nodePort: 30000  # Ensure this is defined
+#service:
+#  nodePort: 32000  # Ensure this is defined
 
 # RBAC settings
 rbac:
@@ -65,34 +65,3 @@ pv:
   enabled: true  # Whether to create a PV
   capacity: 10Gi  # Adjust as needed
 
-## For Nginx
-#namespace: bz-appy
-#nginx:
-#  replicas: 1
-#  image: beny14/nginx_static:latest
-#  service:
-#    nodePort: 30000
-#  hpa:
-#    minReplicas: 1
-#    maxReplicas: 2
-#    targetCPUUtilizationPercentage: 50
-#  ingress:
-#    host: nginx.local  # Ensure this is set correctly
-#  pvc:
-#    storage: 10Gi
-#
-#pvc:
-#  accessModes:
-#    - ReadWriteOnce
-#  storageClassName: standard
-#
-#rbac:
-#  enabled: true
-#  role:
-#    name: pvc-access
-#  roleBinding:
-#    name: jenkins-pvc-access
-#
-#pv:
-#  enabled: true
-#  capacity: 10Gi

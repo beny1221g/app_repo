@@ -90,30 +90,18 @@ spec:
             port:
               number: {{ .Values.container.port }}
 
-#apiVersion: apps/v1
-#kind: Deployment
-#metadata:
-#  name: nginx-deployment
-#  namespace: {{ .Values.namespace }}
-#spec:
-#  replicas: {{ .Values.nginx.replicas }}
-#  selector:
-#    matchLabels:
-#      app: nginx
-#  template:
-#    metadata:
-#      labels:
-#        app: nginx
-#    spec:
-#      containers:
-#      - name: nginx
-#        image: {{ .Values.nginx.image }}
-#        ports:
-#        - containerPort: 80
-#        volumeMounts:
-#        - mountPath: /usr/share/nginx/html
-#          name: nginx-storage
-#      volumes:
-#      - name: nginx-storage
-#        persistentVolumeClaim:
-#          claimName: nginx-pvc
+---
+# jenkins-pvc-access RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jenkins-pvc-access
+  namespace: bz-appy
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: bz-jenkins
+roleRef:
+  kind: Role
+  name: pvc-access
+  apiGroup: rbac.authorization.k8s.io

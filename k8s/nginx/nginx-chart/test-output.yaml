@@ -1,0 +1,177 @@
+---
+# Source: nginx-chart/templates/nginx-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nginx-pv
+  namespace:   # Use dynamic namespace from values.yaml
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes: [ReadWriteOnce]
+  storageClassName: standard
+  hostPath:
+    path: /home/bz/Desktop/kube_repo/k8s/nginx/nginx-chart/templates/nginx-pvc.yaml  # Update as needed
+---
+# Source: nginx-chart/templates/nginx-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nginx-pvc
+  namespace: bz-appy  # Uses the namespace from the Helm release
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+# Source: nginx-chart/templates/nginx-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pvc-access
+  namespace: 
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims", "secrets"]
+    verbs: ["get", "list", "create"]  # Ensure 'create' is included here
+---
+# Source: nginx-chart/templates/pvc-access.yaml
+# Source: nginx-chart/templates/pvc-access.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pvc-access
+  namespace: bz-appy
+rules:
+  - apiGroups: [""]                     # Core API group for basic resources like PVCs
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]                  # API group for apps resources, including deployments
+    resources: ["deployments"]
+    verbs: ["get", "list", "create", "update", "delete"]
+---
+# Source: nginx-chart/templates/nginx-deployment.yaml
+# jenkins-pvc-access RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jenkins-pvc-access
+  namespace: bz-appy
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: bz-jenkins
+roleRef:
+  kind: Role
+  name: pvc-access
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: nginx-chart/templates/nginx-rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jenkins-pvc-access
+  namespace: 
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: bz-jenkins
+roleRef:
+  kind: Role
+  name: pvc-access
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: nginx-chart/templates/nginx-deployment.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-deployment-service
+  namespace: bz-appy
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: NodePort
+---
+# Source: nginx-chart/templates/nginx-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: bz-appy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: "beny14/nginx_static:latest"
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        volumeMounts:
+        - name: nginx-data
+          mountPath: /var/www/html
+      volumes:
+      - name: nginx-data
+        persistentVolumeClaim:
+          claimName: nginx-pvc   # Correctly referencing the PVC
+---
+# Source: nginx-chart/templates/nginx-deployment.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-deployment-hpa
+  namespace: bz-appy
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+---
+# Source: nginx-chart/templates/nginx-deployment.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-deployment-ingress
+  namespace: bz-appy
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: ubuntu.myguest.virtualbox.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-deployment-service
+            port:
+              number: 80
