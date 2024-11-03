@@ -48,78 +48,64 @@ pipeline {
     }
 
     options {
-        timeout(time: 5, unit: 'MINUTES')
+        timeout(time: 5, unit: 'MINUTES')  // Sets a timeout for the entire pipeline
     }
 
     environment {
-        aws_region = "us-east-2"
-        ecr_registry = "023196572641.dkr.ecr.us-east-2.amazonaws.com"
-        ecr_repo = "${ecr_registry}/beny14/aws_repo"
-        image_tag_p = "python_app:${BUILD_NUMBER}"
-        image_tag_n = "nginx_static:${BUILD_NUMBER}"
-        cluster_name = "eks-X10-prod-01"
-        kubeconfig_path = "/root/.kube/config" // Ensure this path is correct
-        namespace = "bz-appy"
-        sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:osher-nginx-deployment"
-        git_repo_url = "https://github.com/beny1221g/k8s.git"
-        localHelmPath = "${WORKSPACE}/nginx-chart/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz" // Updated path to use the correct location
+        aws_region = "us-east-2"  // AWS region for EKS and SNS
+        ecr_registry = "023196572641.dkr.ecr.us-east-2.amazonaws.com"  // AWS ECR registry URL
+        ecr_repo = "${ecr_registry}/beny14/aws_repo"  // ECR repository path
+        image_tag_p = "python_app:${BUILD_NUMBER}"  // Tag for Python application image
+        image_tag_n = "nginx_static:${BUILD_NUMBER}"  // Tag for NGINX static content image
+        cluster_name = "eks-X10-prod-01"  // EKS cluster name
+        kubeconfig_path = "/root/.kube/config"  // Path to kubeconfig file in the container
+        namespace = "bz-appy"  // Kubernetes namespace for deployment
+        sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:osher-nginx-deployment"  // SNS topic for notifications
+        git_repo_url = "https://github.com/beny1221g/k8s.git"  // Git repository URL for Helm charts
+        localHelmPath = "${WORKSPACE}/nginx-chart/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz"  // Path to Helm chart package
     }
 
     stages {
         stage('Setup Tools') {
             steps {
                 script {
-                    echo "Installing required packages"
+                    echo "Installing required tools in the 'install-tools' container"
                     container('install-tools') {
                         sh '''
+                        # Update and install essential packages
                         apt-get update
                         apt-get install -y unzip curl git
 
-                        # Check and install AWS CLI
-                        if ! command -v aws &> /dev/null; then
-                            echo "Installing AWS CLI"
-                            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                            unzip awscliv2.zip
-                            ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
-                        else
-                            echo "AWS CLI already installed"
-                        fi
+                        # Download and install AWS CLI
+                        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                        unzip awscliv2.zip
+                        ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
 
-                        # Check and install kubectl
-                        if ! command -v kubectl &> /dev/null; then
-                            echo "Installing kubectl"
-                            curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
-                            chmod +x kubectl
-                            mv kubectl /usr/local/bin/
-                        else
-                            echo "kubectl already installed"
-                        fi
+                        # Download and install kubectl
+                        curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+                        chmod +x kubectl
+                        mv kubectl /usr/local/bin/
 
-                        # Check and install Helm
-                        if ! command -v helm &> /dev/null; then
-                            echo "Installing Helm"
-                            curl -LO https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz
-                            tar -zxvf helm-v3.9.0-linux-amd64.tar.gz
-                            mv linux-amd64/helm /usr/local/bin/
-                            chmod +x /usr/local/bin/helm
-                        else
-                            echo "Helm already installed"
-                        fi
+                        # Download and install Helm
+                        curl -LO https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz
+                        tar -zxvf helm-v3.9.0-linux-amd64.tar.gz
+                        mv linux-amd64/helm /usr/local/bin/
+                        chmod +x /usr/local/bin/helm
                         '''
                     }
                 }
             }
         }
 
-        stage('Generate Helm Chart') {
+        stage('Generate Helm Chart Directory') {
             steps {
                 container('install-tools') {
                     script {
-                        echo "Creating necessary directories..."
+                        echo "Setting up directory structure for Helm chart"
                         sh '''
+                            # Create the Helm chart directory
                             mkdir -p ${WORKSPACE}/nginx-chart
-                            echo "Current directory contents:"
-                            ls -l ${WORKSPACE}/nginx-chart
+                            ls -l ${WORKSPACE}/nginx-chart  # List contents to verify
                         '''
                     }
                 }
@@ -130,50 +116,69 @@ pipeline {
             steps {
                 container('install-tools') {
                     script {
-                        echo "Cloning repository for Helm chart..."
+                        echo "Cloning Helm chart repository"
                         sh '''
+                            # Clone the repository to the Jenkins workspace
                             git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/nginx-chart
-                            echo "Contents of the directory after cloning:"
-                            ls -l /home/jenkins/agent/workspace/app_deploy/nginx-chart
+                            # Check the structure of the cloned directory
+                            ls -R /home/jenkins/agent/workspace/app_deploy/nginx-chart
                         '''
                     }
                 }
             }
         }
 
-        stage('Adding pvc-access') {
-           steps {
-               container('install-tools') {
-                  script {
-                    echo "Annotating and labeling Role and RoleBinding for Helm management..."
-                    sh '''
-                    kubectl annotate role pvc-access meta.helm.sh/release-name=nginx-bz \
-                    meta.helm.sh/release-namespace=bz-appy -n bz-appy --overwrite
-                    kubectl label role pvc-access app.kubernetes.io/managed-by=Helm -n bz-appy --overwrite
-
-                    kubectl annotate rolebinding jenkins-pvc-access meta.helm.sh/release-name=nginx-bz \
-                    meta.helm.sh/release-namespace=bz-appy -n bz-appy --overwrite
-                    kubectl label rolebinding jenkins-pvc-access app.kubernetes.io/managed-by=Helm -n bz-appy --overwrite
-                    '''
-                    }
-                 }
-           }
-        }
-
         stage('Deploy to Kubernetes') {
             steps {
                 container('install-tools') {
                     script {
-                        echo "Attempting to install Helm chart from: ${localHelmPath}"
-
+                        echo "Deploying Helm chart to Kubernetes namespace: ${namespace}"
                         sh '''
+                            # Check if the Helm release already exists
                             if helm ls -n ${namespace} | grep -q nginx-bz; then
-                                echo "Release nginx-bz already exists. Attempting to upgrade..."
+                                echo "Release nginx-bz exists; upgrading..."
                                 helm upgrade --install nginx-bz ${localHelmPath} -n ${namespace} --set rbac.create=false
                             else
                                 echo "Installing new release nginx-bz..."
                                 helm install nginx-bz ${localHelmPath} -n ${namespace}
                             fi
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Verify Helm Deployment') {
+            steps {
+                container('install-tools') {
+                    script {
+                        echo "Ensuring Helm has deployed all resources correctly"
+                        sh '''
+                            # Wait until the pvc-access role exists in Kubernetes
+                            until kubectl get role pvc-access -n ${namespace}; do
+                                echo "Waiting for pvc-access role to be available..."
+                                sleep 5
+                            done
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Add Annotations to pvc-access') {
+            steps {
+                container('install-tools') {
+                    script {
+                        echo "Annotating and labeling Role and RoleBinding for Helm management"
+                        sh '''
+                            # Add annotations and labels to role and rolebinding
+                            kubectl annotate role pvc-access meta.helm.sh/release-name=nginx-bz \
+                            meta.helm.sh/release-namespace=${namespace} -n ${namespace} --overwrite
+                            kubectl label role pvc-access app.kubernetes.io/managed-by=Helm -n ${namespace} --overwrite
+
+                            kubectl annotate rolebinding jenkins-pvc-access meta.helm.sh/release-name=nginx-bz \
+                            meta.helm.sh/release-namespace=${namespace} -n ${namespace} --overwrite
+                            kubectl label rolebinding jenkins-pvc-access app.kubernetes.io/managed-by=Helm -n ${namespace} --overwrite
                         '''
                     }
                 }
@@ -193,6 +198,7 @@ pipeline {
     }
 }
 
+// Helper function to send SNS notifications
 def sendSNSNotification(status, message) {
     script {
         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
