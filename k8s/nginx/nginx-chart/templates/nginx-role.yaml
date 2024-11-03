@@ -5,7 +5,10 @@ metadata:
   name: {{ .Values.rbac.role.name }}
   namespace: {{ .Values.namespace }}
 rules:
-  - apiGroups: [""]
+  - apiGroups: [""]  # Core API group
     resources: ["persistentvolumeclaims", "secrets"]
     verbs: ["get", "list", "create"]  # Ensure 'create' is included here
+  - apiGroups: ["autoscaling"]  # API group for HPA
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list", "create", "update", "delete"]  # Add permissions for HPA
 {{- end }}
