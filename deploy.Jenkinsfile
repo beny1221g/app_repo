@@ -60,7 +60,7 @@ pipeline {
         cluster_name = "eks-X10-prod-01"  // EKS cluster name
         kubeconfig_path = "/root/.kube/config"  // Path to kubeconfig file in the container
         namespace = "bz-appy"  // Kubernetes namespace for deployment
-        sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:osher-nginx-deployment"  // SNS topic for notifications
+        sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:deploy_bz"  // SNS topic for notifications
         git_repo_url = "https://github.com/beny1221g/k8s.git"  // Git repository URL for Helm charts
         localHelmPath = "${WORKSPACE}/nginx-chart/k8s/nginx/nginx-chart/nginx-chart-0.1.0.tgz"  // Path to Helm chart package
     }
