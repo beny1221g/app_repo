@@ -90,28 +90,31 @@ spec:
             port:
               number: {{ .Values.container.port }}
 ---
-# Role YAML (for accessing HPA in the bz-appy namespace)
+# hpa-access Role YAML
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: hpa-access
-  namespace: bz-appy  # Ensure namespace is specified
+  namespace: {{ .Values.namespace }}
 rules:
   - apiGroups: ["autoscaling"]
     resources: ["horizontalpodautoscalers"]
-    verbs: ["get", "list", "watch"]
+    verbs: ["get", "list", "watch", "delete"]
+
 ---
-# RoleBinding YAML (binding the hpa-access role to the Jenkins service account)
+
+# hpa-access-binding RoleBinding YAML
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: hpa-access-binding
-  namespace: bz-appy  # Ensure namespace is specified
+  namespace: {{ .Values.namespace }}
 subjects:
   - kind: ServiceAccount
     name: default
-    namespace: bz-jenkins  # Jenkins service account's namespace
+    namespace: bz-jenkins
 roleRef:
   kind: Role
   name: hpa-access
   apiGroup: rbac.authorization.k8s.io
+
