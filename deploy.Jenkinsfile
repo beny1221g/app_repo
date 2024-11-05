@@ -132,15 +132,27 @@ pipeline {
             steps {
                 container('install-tools') {
                     script {
+                        echo "Ensuring cleanup of old resources in ${namespace} namespace"
+                        sh '''
+                        kubectl delete hpa -n ${namespace} --all
+                        kubectl delete deploy,svc,ingress -n ${namespace} --all
+                    '''
+
+                        echo "Verifying Role and RoleBinding setup"
+                        sh '''
+                        kubectl get role hpa-access -n ${namespace}
+                        kubectl get rolebinding hpa-access-binding -n ${namespace}
+                    '''
+
                         echo "Deploying Helm chart to Kubernetes namespace: ${namespace}"
                         sh '''
-                                echo "Release nginx-bz exists; upgrading..."
-                                helm upgrade --install nginx-bz ${localHelmPath} -n ${namespace}
-                        '''
+                        helm upgrade --install nginx-bz ${localHelmPath} --namespace ${namespace} --create-namespace
+                    '''
                     }
                 }
-            }
-        }
+             }
+         }
+
 
 
     }
