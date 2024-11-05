@@ -1,4 +1,0 @@
-apiVersion: v2
-name: nginx-chart
-description: A Helm chart for NGINX deployment
-version: 0.1.0

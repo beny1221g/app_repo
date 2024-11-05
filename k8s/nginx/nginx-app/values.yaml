@@ -1,0 +1,32 @@
+storage: 1Gi
+appNameSpace: bz-appy
+pvc:
+  name: nginx-pvc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+deployment:
+  name: nginx-deployment
+  replicas: 3
+appName: nginx
+container:
+  name: nginx
+  port: 80
+image:
+  repository: beny14/nginx_static
+  tag: latest
+resources:
+  requests:
+    memory: 64Mi
+    cpu: 250m
+  limits:
+    memory: 128Mi
+    cpu: 500m
+volume:
+  mountPath: /var/www/html
+hpa:
+  minReplicas: 2
+  maxReplicas: 5
+  averageUtilization: 50

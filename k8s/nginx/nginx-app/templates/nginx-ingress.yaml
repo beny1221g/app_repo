@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+  namespace: {{ .Values.appNameSpace }}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: ec2-user
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-service
+            port:
+              number: 80
+  # Uncomment the following lines if you want to configure TLS
+  # tls:
+  # - hosts:
+  #   - example.com
+  #   secretName: example-tls  # Replace with your actual TLS secret name
