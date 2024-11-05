@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Values.namespace }}
 spec:
   accessModes:
-    - {{ .Values.pvc.accessModes[0] }}
+    - {{ index .Values.pvc.accessModes 0 }}
   resources:
     requests:
       storage: {{ .Values.pvc.resources.requests.storage }}
