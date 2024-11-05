@@ -111,3 +111,39 @@ roleRef:
   kind: ClusterRole
   name: hpa-access
   apiGroup: rbac.authorization.k8s.io
+
+
+---
+
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: jenkins-access
+  namespace: bz-appy
+rules:
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims", "pods", "services"]
+  verbs: ["get", "list", "watch", "create", "update", "delete"]
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["roles", "rolebindings"]
+  verbs: ["get", "list", "watch", "create", "update", "delete"]
+- apiGroups: ["autoscaling"]  # Added line
+  resources: ["horizontalpodautoscalers"]  # Added line
+  verbs: ["get", "list", "watch", "create", "update", "delete"]  # Added line
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jenkins-access-binding
+  namespace: bz-appy
+subjects:
+  - kind: ServiceAccount
+    name: default  # Name of the service account in the bz-jenkins namespace
+    namespace: bz-jenkins
+roleRef:
+  kind: Role
+  name: jenkins-access
+  apiGroup: rbac.authorization.k8s.io
