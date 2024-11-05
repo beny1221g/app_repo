@@ -62,7 +62,7 @@ pipeline {
         namespace = "bz-appy"  // Kubernetes namespace for deployment
         sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:deploy_bz"  // SNS topic for notifications
         git_repo_url = "https://github.com/beny1221g/k8s.git"  // Git repository URL for Helm charts
-        localHelmPath = "${WORKSPACE}/nginx-chart/k8s/nginx/nginx-chart"  // Path to Helm chart package
+        localHelmPath = "${WORKSPACE}/nginx-chart/k8s/nginx/nginx-app"  // Path to Helm chart package
     }
 
     stages {
