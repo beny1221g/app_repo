@@ -97,7 +97,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: hpa-access
-  namespace: bz-appy
+  namespace:
 rules:
   - apiGroups: ["autoscaling"]
     resources: ["horizontalpodautoscalers"]
@@ -110,7 +110,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: hpa-access-binding
-  namespace: bz-appy
+  namespace:
 subjects:
   - kind: ServiceAccount
     name: default
