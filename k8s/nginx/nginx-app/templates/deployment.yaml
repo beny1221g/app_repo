@@ -89,28 +89,24 @@ spec:
             name: {{ .Values.deployment.name }}-service
             port:
               number: {{ .Values.container.port }}
-
 ---
-
-# templates/hpa-access-role.yaml
+# Role YAML
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: hpa-access
-  namespace:
+  namespace: {{ .Values.namespace }}  # Refers to bz-appy
 rules:
   - apiGroups: ["autoscaling"]
     resources: ["horizontalpodautoscalers"]
     verbs: ["get", "list", "watch"]
-
 ---
-
-# templates/hpa-access-rolebinding.yaml
+# RoleBinding YAML
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: hpa-access-binding
-  namespace:
+  namespace: {{ .Values.namespace }}  # Refers to bz-appy
 subjects:
   - kind: ServiceAccount
     name: default
@@ -119,3 +115,4 @@ roleRef:
   kind: Role
   name: hpa-access
   apiGroup: rbac.authorization.k8s.io
+ation.k8s.io
