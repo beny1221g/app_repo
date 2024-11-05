@@ -34,25 +34,21 @@ spec:
           claimName: {{ .Values.pvc.name }}   # Correctly referencing the PVC
 
 ---
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
 metadata:
-  name: {{ .Values.deployment.name }}-hpa
-  namespace: {{ .Release.Namespace }}
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: {{ .Values.deployment.name }}
-  minReplicas: {{ .Values.hpa.minReplicas }}
-  maxReplicas: {{ .Values.hpa.maxReplicas }}
-  metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: {{ .Values.hpa.averageUtilization }}
+  name: jenkins-access
+  namespace: bz-appy
+rules:
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["get", "list", "watch", "create", "update", "delete"]
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims", "pods", "services"]
+  verbs: ["get", "list", "watch", "create", "update", "delete"]
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["roles", "rolebindings"]
+  verbs: ["get", "list", "watch", "create", "update", "delete"]
 
 ---
 apiVersion: v1
