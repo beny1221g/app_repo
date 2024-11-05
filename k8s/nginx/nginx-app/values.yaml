@@ -8,7 +8,7 @@ pvc:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi  # Updated storage request to match your specifications
+      storage: 1Gi
 
 # Deployment configuration
 deployment:

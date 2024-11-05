@@ -9,4 +9,4 @@ spec:
   accessModes: {{ .Values.pvc.accessModes }}
   storageClassName: {{ .Values.pvc.storageClassName }}
   hostPath:
-    path: /home/ec2-user/Desktop/kube_repo/k8s/nginx/nginx-chart_my/templates/nginx-pvc.yaml  # Update as needed
+    path: /home/ec2-user/Desktop/kube_repo/k8s/nginx/nginx-chart_my/templates/pvc.yaml  # Update as needed

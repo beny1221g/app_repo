@@ -72,6 +72,7 @@ pipeline {
                     echo "Installing required tools in the 'install-tools' container"
                     container('install-tools') {
                         sh '''
+                        set -e  # Stop on any error
                         # Update and install essential packages
                         apt-get update
                         apt-get install -y unzip curl git
@@ -134,10 +135,11 @@ pipeline {
                     script {
                         echo "Ensuring cleanup of old resources in ${namespace} namespace"
                         sh '''
-                        kubectl delete hpa -n ${namespace} --all
-                        kubectl delete deployment -n ${namespace} --all
-                        kubectl delete service -n ${namespace} --all
-                        kubectl delete pvc -n ${namespace} --all
+                        # Check and delete old resources
+                        kubectl get hpa -n ${namespace} && kubectl delete hpa -n ${namespace} --all || echo "No HPA resources to delete"
+                        kubectl get deployment -n ${namespace} && kubectl delete deployment -n ${namespace} --all || echo "No deployments to delete"
+                        kubectl get service -n ${namespace} && kubectl delete service -n ${namespace} --all || echo "No services to delete"
+                        kubectl get pvc -n ${namespace} && kubectl delete pvc -n ${namespace} --all || echo "No PVCs to delete"
                         '''
 
                         echo "Installing/Upgrading Helm release"

@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.deployment.name }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ .Values.namespace }}
 spec:
   replicas: {{ .Values.deployment.replicas }}
   selector:
@@ -14,21 +14,21 @@ spec:
         app: {{ .Values.appName }}
     spec:
       containers:
-      - name: {{ .Values.container.name }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        ports:
-        - containerPort: {{ .Values.container.port }}
-        resources:
-          requests:
-            memory: "{{ .Values.resources.requests.memory }}"
-            cpu: "{{ .Values.resources.requests.cpu }}"
-          limits:
-            memory: "{{ .Values.resources.limits.memory }}"
-            cpu: "{{ .Values.resources.limits.cpu }}"
-        volumeMounts:
-        - name: nginx-data
-          mountPath: {{ .Values.volume.mountPath }}
+        - name: {{ .Values.container.name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.container.port }}
+          resources:
+            requests:
+              memory: {{ .Values.resources.requests.memory }}
+              cpu: {{ .Values.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.resources.limits.memory }}
+              cpu: {{ .Values.resources.limits.cpu }}
+          volumeMounts:
+            - mountPath: {{ .Values.volume.mountPath }}
+              name: nginx-storage
       volumes:
-      - name: nginx-data
-        persistentVolumeClaim:
-          claimName: {{ .Values.pvc.name }}   # Correctly referencing the PVC
+        - name: nginx-storage
+          persistentVolumeClaim:
+            claimName: {{ .Values.pvc.name }}
