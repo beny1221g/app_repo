@@ -106,9 +106,8 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: default
-    namespace: bz-jenkins
+    namespace: bz-jenkins  # Your Jenkins namespace
 roleRef:
   kind: ClusterRole
-  name: hpa-access
+  name: hpa-access  # This should match the ClusterRole name
   apiGroup: rbac.authorization.k8s.io
-
