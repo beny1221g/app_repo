@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: hpa-manager-binding
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: bz-jenkins  # The namespace where the Jenkins service account is located
+roleRef:
+  kind: ClusterRole
+  name: hpa-manager  # The ClusterRole that grants the necessary permissions
+  apiGroup: rbac.authorization.k8s.io
