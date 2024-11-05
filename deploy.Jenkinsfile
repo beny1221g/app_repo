@@ -129,28 +129,30 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
-            steps {
-                container('install-tools') {
-                    script {
-                        echo "Ensuring cleanup of old resources in ${namespace} namespace"
-                        sh '''
-                        # Check and delete old resources
-                        kubectl get hpa -n ${namespace} && kubectl delete hpa -n ${namespace} --all || echo "No HPA resources to delete"
-                        kubectl get deployment -n ${namespace} && kubectl delete deployment -n ${namespace} --all || echo "No deployments to delete"
-                        kubectl get service -n ${namespace} && kubectl delete service -n ${namespace} --all || echo "No services to delete"
-                        kubectl get pvc -n ${namespace} && kubectl delete pvc -n ${namespace} --all || echo "No PVCs to delete"
-                        '''
+       stage('Deploy to Kubernetes') {
+        steps {
+        container('install-tools') {
+            script {
+                echo "Ensuring cleanup of old resources in ${namespace} namespace"
+                sh '''
+                # Check and delete old resources
+                kubectl get hpa -n ${namespace} && kubectl delete hpa -n ${namespace} --all || echo "No HPA resources to delete"
+                kubectl get deployment -n ${namespace} && kubectl delete deployment -n ${namespace} --all || echo "No deployments to delete"
+                kubectl get service -n ${namespace} && kubectl delete service -n ${namespace} --all || echo "No services to delete"
+                kubectl get pvc -n ${namespace} && kubectl delete pvc -n ${namespace} --all || echo "No PVCs to delete"
+                '''
 
-                        echo "Installing/Upgrading Helm release"
-                        sh '''
-                        helm upgrade --install ${image_tag_n} ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_n} --set replicas=1 --set hpa.enabled=true
-                        helm upgrade --install ${image_tag_p} ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_p}
-                        '''
-                    }
-                }
+                echo "Installing/Upgrading Helm release"
+                sh '''
+                # Use a valid release name (e.g., 'nginx-static-release')
+                helm upgrade --install nginx-static-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_n} --set replicas=1 --set hpa.enabled=true
+                helm upgrade --install python-app-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_p}
+                '''
             }
         }
+    }
+}
+
 
         stage('Notify Deployment') {
             steps {
