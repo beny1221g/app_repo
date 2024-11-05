@@ -2,12 +2,12 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: nginx-ingress
-  namespace: {{ .Values.appNameSpace }}
+  namespace:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-  - host: ec2-user
+  - host: cubr.myguest.virtualbox.org
     http:
       paths:
       - path: /

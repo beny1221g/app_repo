@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.deployment.name }}
-  namespace: {{ .Values.appNameSpace }}
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: {{ .Values.deployment.replicas }}
   selector:
@@ -38,7 +38,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ .Values.deployment.name }}-hpa
-  namespace: {{ .Values.appNameSpace }}
+  namespace: {{ .Release.Namespace }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -59,7 +59,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Values.deployment.name }}-service
-  namespace: {{ .Values.appNameSpace }}
+  namespace: {{ .Release.Namespace }}
 spec:
   selector:
     app: {{ .Values.appName }}
@@ -74,12 +74,12 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ .Values.deployment.name }}-ingress
-  namespace: {{ .Values.appNameSpace }}
+  namespace: {{ .Release.Namespace }}
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-  - host: ec2-user
+  - host: ubuntu.myguest.virtualbox.org
     http:
       paths:
       - path: /
