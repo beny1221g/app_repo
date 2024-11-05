@@ -1,24 +1,19 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: nginx-ingress
-  namespace:
+  name: {{ .Values.deployment.name }}-ingress
+  namespace: {{ .Release.Namespace }}
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-  - host: cubr.myguest.virtualbox.org
+  - host: ubuntu.myguest.virtualbox.org
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: nginx-service
+            name: {{ .Values.deployment.name }}-service
             port:
-              number: 80
-  # Uncomment the following lines if you want to configure TLS
-  # tls:
-  # - hosts:
-  #   - example.com
-  #   secretName: example-tls  # Replace with your actual TLS secret name
+              number: {{ .Values.container.port }}

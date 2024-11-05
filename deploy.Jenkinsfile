@@ -135,56 +135,43 @@ pipeline {
                         echo "Ensuring cleanup of old resources in ${namespace} namespace"
                         sh '''
                         kubectl delete hpa -n ${namespace} --all
-                        kubectl delete deploy,svc,ingress -n ${namespace} --all
-                    '''
+                        kubectl delete deployment -n ${namespace} --all
+                        kubectl delete service -n ${namespace} --all
+                        kubectl delete pvc -n ${namespace} --all
+                        '''
 
-                        echo "Verifying Role and RoleBinding setup"
+                        echo "Installing/Upgrading Helm release"
                         sh '''
-                        kubectl get role hpa-access -n ${namespace}
-                        kubectl get rolebinding hpa-access-binding -n ${namespace}
-                    '''
-
-                        echo "Deploying Helm chart to Kubernetes namespace: ${namespace}"
-                        sh '''
-                        helm upgrade --install nginx-bz ${localHelmPath} --namespace ${namespace} --create-namespace
-                    '''
+                        helm upgrade --install ${image_tag_n} ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_n} --set replicas=1 --set hpa.enabled=true
+                        helm upgrade --install ${image_tag_p} ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_p}
+                        '''
                     }
                 }
-             }
-         }
+            }
+        }
 
-
-
+        stage('Notify Deployment') {
+            steps {
+                script {
+                    echo "Sending deployment notification"
+                    sh '''
+                    aws sns publish --topic-arn ${sns_topic_arn} --message "Deployment of ${image_tag_n} and ${image_tag_p} completed successfully."
+                    '''
+                }
+            }
+        }
     }
 
     post {
+        always {
+            echo "Cleaning up resources..."
+            // Cleanup code here, if necessary
+        }
         success {
-            echo "Deployment to EKS completed successfully."
-            sendSNSNotification("SUCCESS", "nginx-Deployment to EKS completed successfully for ${env.deployment_name}")
+            echo "Pipeline completed successfully."
         }
         failure {
-            echo "Deployment failed. Check logs for details."
-            sendSNSNotification("FAILURE", "Deployment failed for ${env.deployment_name}. Check logs for details.")
-        }
-    }
-}
-
-// Helper function to send SNS notifications
-def sendSNSNotification(status, message) {
-    script {
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-            credentialsId: 'aws']]) {
-            container('install-tools') {
-                sh """
-                    aws sns publish \
-                        --region "${env.aws_region}" \
-                        --topic-arn "${env.sns_topic_arn}" \
-                        --message "Deployment Status: ${status}\\nMessage: ${message}" \
-                        --subject "Deployment ${status}: ${env.deployment_name}"
-                """
-            }
+            echo "Pipeline failed. Please check logs."
         }
     }
 }
