@@ -80,18 +80,19 @@ pipeline {
         }
 
         stage('Download Deployment Files') {
-            steps {
-                container('install-tools') {
-                    script {
-                        echo "Cloning GitHub repository"
-                        sh '''
-                            git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/nginx-deployment
-                            ls -R /home/jenkins/agent/workspace/app_deploy/nginx-deployment
-                        '''
-                    }
-                }
+          steps {
+            container('install-tools') {
+            script {
+                echo "Cloning GitHub repository"
+                sh '''
+                    git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/nginx-deployment
+                    ls -R /home/jenkins/agent/workspace/app_deploy/nginx-deployment
+                '''
             }
         }
+    }
+}
+
 
         stage('Deploy to Kubernetes') {
             steps {
