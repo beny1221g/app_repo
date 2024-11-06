@@ -79,20 +79,23 @@ pipeline {
             }
         }
 
-        stage('Download Deployment Files') {
+stage('Download Deployment Files') {
     steps {
         container('install-tools') {
             script {
-                echo "Cloning GitHub repository"
+                echo "Cloning GitHub repository into /home/jenkins/agent/workspace/app_deploy"
                 sh '''
-                    git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/nginx-deployment
-                    echo "Listing contents of /home/jenkins/agent/workspace/app_deploy/nginx-deployment"
-                    ls -R /home/jenkins/agent/workspace/app_deploy/nginx-deployment
+                    # Clone the repository into the designated folder
+                    git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy
+                    echo "Listing the directory structure of /home/jenkins/agent/workspace/app_deploy"
+                    ls -R /home/jenkins/agent/workspace/app_deploy
+                    # Verify the contents of the directory tree to find the YAML files
                 '''
             }
         }
     }
 }
+
 
 
         stage('Deploy to Kubernetes') {
