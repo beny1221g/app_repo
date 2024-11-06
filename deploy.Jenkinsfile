@@ -109,6 +109,7 @@ stage('Deploy to Kubernetes') {
                 # Apply the required permissions first
                 kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/hpa-ingress-role.yaml --namespace bz-appy
                 kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/hpa-ingress-rolebinding.yaml --namespace bz-appy
+                kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/clusterrole-binding.yaml
 
                 # Check if the deployment exists before deleting
                 kubectl get deployment nginx-deployment --namespace bz-appy || echo "Deployment nginx-deployment not found"
@@ -130,13 +131,13 @@ stage('Deploy to Kubernetes') {
                 kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment.yaml --namespace bz-appy
 
                 # Wait for the deployment to complete
-                kubectl rollout status deployment/nginx-deployment --namespace bz-appy --timeout=5m
-
+                kubectl rollout status deployment/nginx-deployment --namespace bz-appy
                 '''
             }
         }
     }
 }
+
 
 
 
