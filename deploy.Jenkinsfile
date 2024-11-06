@@ -135,7 +135,7 @@ pipeline {
                         sh '''
                         # Delete old resources using Helm if they exist
                         helm delete nginx-static-release --namespace ${namespace} || echo "No nginx-static-release to delete"
-                        helm delete python-app-release --namespace ${namespace} || echo "No python-app-release to delete"
+                        # -- helm delete python-app-release --namespace ${namespace} || echo "No python-app-release to delete"
 
                         # Optionally, remove leftover resources directly using kubectl
                         kubectl get hpa -n ${namespace} && kubectl delete hpa -n ${namespace} --all || echo "No HPA resources to delete"
@@ -146,8 +146,8 @@ pipeline {
                         echo "Installing/Upgrading Helm releases"
                         sh '''
                         # Install or upgrade Helm releases (NGINX and Python app)
-                        helm upgrade --install nginx-static-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_n} --set replicas=1 --set hpa.enabled=true --create-namespace
-                        helm upgrade --install python-app-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_p} --create-namespace
+                        helm upgrade --install nginx-static-release ${localHelmPath} --namespace ${namespace}  --set hpa.enabled=true
+                        # -- helm upgrade --install python-app-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_p}
                         '''
                     }
                 }
