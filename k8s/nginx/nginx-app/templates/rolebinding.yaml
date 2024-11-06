@@ -18,5 +18,5 @@ roleRef:
   name: impersonate-serviceaccount
 subjects:
   - kind: ServiceAccount
-    name: default  # Jenkins service account
+    name: default  # Or the specific service account Jenkins uses
     namespace: bz-jenkins
