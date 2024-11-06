@@ -1,22 +1,13 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: RoleBinding
 metadata:
-  name: impersonate-serviceaccount
-rules:
-  - apiGroups: [""]
-    resources: ["serviceaccounts"]
-    verbs: ["impersonate"]
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: impersonate-serviceaccount-binding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: impersonate-serviceaccount
+  name: jenkins-access-binding
+  namespace: bz-appy
 subjects:
-  - kind: ServiceAccount
-    name: default  # Or the specific service account Jenkins uses
-    namespace: bz-jenkins
+- kind: ServiceAccount
+  name: default  # Ensure this matches your Jenkins service account
+  namespace: bz-jenkins  # Ensure this is the namespace where Jenkins is running
+roleRef:
+  kind: Role
+  name: jenkins-access
+  apiGroup: rbac.authorization.k8s.io
