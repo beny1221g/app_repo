@@ -107,9 +107,9 @@ stage('Deploy to Kubernetes') {
                 echo "Applying Kubernetes YAML files for NGINX deployment"
                 sh '''
                 # Apply the required permissions first
+                kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/clusterrole-binding.yaml
                 kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/hpa-ingress-role.yaml --namespace bz-appy
                 kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/hpa-ingress-rolebinding.yaml --namespace bz-appy
-                kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/clusterrole-binding.yaml
 
                 # Check if the deployment exists before deleting
                 kubectl get deployment nginx-deployment --namespace bz-appy || echo "Deployment nginx-deployment not found"
