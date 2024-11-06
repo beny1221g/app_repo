@@ -1,9 +1,0 @@
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  # You can adjust the name to reflect your needs
-  name: jenkins-manager
-rules:
-  - apiGroups: ["rbac.authorization.k8s.io"]
-    resources: ["clusterroles", "clusterrolebindings"]
-    verbs: ["get", "list", "create", "update", "delete"]

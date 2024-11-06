@@ -1,9 +1,0 @@
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: hpa-manager
-  namespace: {{ .Values.namespace }}
-rules:
-  - apiGroups: ["autoscaling"]
-    resources: ["horizontalpodautoscalers"]
-    verbs: ["get", "list", "create", "update", "delete"]
