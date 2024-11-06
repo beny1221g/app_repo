@@ -79,27 +79,26 @@ pipeline {
             }
         }
 
-stage('Download Deployment Files') {
-    steps {
-        container('install-tools') {
-            script {
-                echo "Cloning GitHub repository into /home/jenkins/agent/workspace/app_deploy/k8s"
-                sh '''
-                    # Create a subdirectory to clone the repo into
-                    mkdir -p /home/jenkins/agent/workspace/app_deploy/k8s
-                    # Clone the repository into the subdirectory
-                    git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/k8s
-                    echo "Listing the directory structure of /home/jenkins/agent/workspace/app_deploy/k8s"
-                    ls -R /home/jenkins/agent/workspace/app_deploy/k8s
-                    # Verify the contents of the directory tree to find the YAML files
-                '''
+        stage('Download Deployment Files') {
+            steps {
+                container('install-tools') {
+                    script {
+                        echo "Cloning GitHub repository into /home/jenkins/agent/workspace/app_deploy/k8s"
+                        sh '''
+                            # Check if the directory already exists, and remove it if so
+                            if [ -d "/home/jenkins/agent/workspace/app_deploy/k8s" ]; then
+                                rm -rf /home/jenkins/agent/workspace/app_deploy/k8s
+                            fi
+                            # Clone the repository into the subdirectory
+                            git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/k8s
+                            echo "Listing the directory structure of /home/jenkins/agent/workspace/app_deploy/k8s"
+                            ls -R /home/jenkins/agent/workspace/app_deploy/k8s
+                            # Verify the contents of the directory tree to find the YAML files
+                        '''
+                    }
+                }
             }
         }
-    }
-}
-
-
-
 
         stage('Deploy to Kubernetes') {
             steps {
@@ -108,16 +107,16 @@ stage('Download Deployment Files') {
                         echo "Applying Kubernetes YAML files for NGINX deployment"
                         sh '''
                         # Clean up old resources
-                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-deployment.yaml --namespace ${namespace} || true
-                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-hpa.yaml --namespace ${namespace} || true
-                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-ingress.yaml --namespace ${namespace} || true
-                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-service.yaml --namespace ${namespace} || true
+                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-deployment.yaml --namespace ${namespace} || true
+                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-hpa.yaml --namespace ${namespace} || true
+                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-ingress.yaml --namespace ${namespace} || true
+                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-service.yaml --namespace ${namespace} || true
 
                         # Apply new configurations
-                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-deployment.yaml --namespace ${namespace}
-                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-hpa.yaml --namespace ${namespace}
-                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-ingress.yaml --namespace ${namespace}
-                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-service.yaml --namespace ${namespace}
+                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-deployment.yaml --namespace ${namespace}
+                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-hpa.yaml --namespace ${namespace}
+                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-ingress.yaml --namespace ${namespace}
+                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-service.yaml --namespace ${namespace}
                         '''
                     }
                 }
