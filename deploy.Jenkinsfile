@@ -83,18 +83,21 @@ stage('Download Deployment Files') {
     steps {
         container('install-tools') {
             script {
-                echo "Cloning GitHub repository into /home/jenkins/agent/workspace/app_deploy"
+                echo "Cloning GitHub repository into /home/jenkins/agent/workspace/app_deploy/k8s"
                 sh '''
-                    # Clone the repository into the designated folder
-                    git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy
-                    echo "Listing the directory structure of /home/jenkins/agent/workspace/app_deploy"
-                    ls -R /home/jenkins/agent/workspace/app_deploy
+                    # Create a subdirectory to clone the repo into
+                    mkdir -p /home/jenkins/agent/workspace/app_deploy/k8s
+                    # Clone the repository into the subdirectory
+                    git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/k8s
+                    echo "Listing the directory structure of /home/jenkins/agent/workspace/app_deploy/k8s"
+                    ls -R /home/jenkins/agent/workspace/app_deploy/k8s
                     # Verify the contents of the directory tree to find the YAML files
                 '''
             }
         }
     }
 }
+
 
 
 
