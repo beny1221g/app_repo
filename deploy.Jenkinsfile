@@ -15,15 +15,6 @@ pipeline {
                   volumeMounts:
                     - name: jenkins-home
                       mountPath: /home/jenkins/agent
-
-                - name: install-tools
-                  image: ubuntu:20.04
-                  command: ['sh', '-c', 'apt-get update && apt-get install -y unzip curl git && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && ./aws/install -i /usr/local/aws-cli -b /usr/local/bin && curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && chmod +x kubectl && mv kubectl /usr/local/bin/ && sleep infinity']
-                  volumeMounts:
-                    - name: jenkins-home
-                      mountPath: /home/jenkins/agent
-                  tty: true
-
               containers:
                 - name: jenkins-agent
                   image: beny14/dockerfile_agent:latest
@@ -44,11 +35,13 @@ pipeline {
                   securityContext:
                     runAsUser: 1000
                     fsGroup: 1000
-
+                - name: install-tools
+                  image: ubuntu:20.04
+                  command: ['sleep', 'infinity']
+                  tty: true
               volumes:
                 - name: jenkins-home
                   emptyDir: {}
-
               restartPolicy: Never
             '''
         }
@@ -70,7 +63,18 @@ pipeline {
         stage('Setup Tools') {
             steps {
                 script {
-                    echo "Tools installation has been handled by initContainers."
+                    container('install-tools') {
+                        sh '''
+                        apt-get update
+                        apt-get install -y unzip curl git
+                        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                        unzip awscliv2.zip
+                        ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
+                        curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+                        chmod +x kubectl
+                        mv kubectl /usr/local/bin/
+                        '''
+                    }
                 }
             }
         }
