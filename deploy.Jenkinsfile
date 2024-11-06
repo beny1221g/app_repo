@@ -1,5 +1,51 @@
 pipeline {
-    agent { label 'ec2-fleet-bz2' }
+    agent {
+        kubernetes {
+            yaml '''
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              name: jenkins-agent
+              namespace: bz-jenkins
+            spec:
+              initContainers:
+                - name: init-permissions
+                  image: busybox
+                  command: ['sh', '-c', 'chmod -R 777 /home/jenkins/agent']
+                  volumeMounts:
+                    - name: jenkins-home
+                      mountPath: /home/jenkins/agent
+              containers:
+                - name: jenkins-agent
+                  image: beny14/dockerfile_agent:latest
+                  command:
+                    - java
+                    - -jar
+                    - /usr/share/jenkins/agent.jar
+                  args:
+                    - -url
+                    - http://k8s-bzjenkin-releasej-c663409355-6f66daf7dc73980b.elb.us-east-2.amazonaws.com:8080
+                    - -name
+                    - jenkins-agent
+                    - -secret
+                    - ${env.JENKINS_AGENT_SECRET}
+                    - -workDir
+                    - /home/jenkins/agent
+                  tty: true
+                  securityContext:
+                    runAsUser: 1000
+                    fsGroup: 1000
+                - name: install-tools
+                  image: ubuntu:20.04
+                  command: ['sleep', 'infinity']
+                  tty: true
+              volumes:
+                - name: jenkins-home
+                  emptyDir: {}
+              restartPolicy: Never
+            '''
+        }
+    }
 
     options {
         timeout(time: 5, unit: 'MINUTES')  // Sets a timeout for the entire pipeline
@@ -20,61 +66,64 @@ pipeline {
     }
 
     stages {
-//         stage('Setup Tools') {
-//             steps {
-//                 script {
-//                     echo "Installing required tools in the 'install-tools' container"
-//                     container('install-tools') {
-//                         sh '''
-//                         set -e  # Stop on any error
-//                         # Update and install essential packages
-//                         apt-get update
-//                         apt-get install -y unzip curl git
-//
-//                         # Download and install AWS CLI
-//                         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-//                         unzip awscliv2.zip
-//                         ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
-//
-//                         # Download and install kubectl
-//                         curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
-//                         chmod +x kubectl
-//                         mv kubectl /usr/local/bin/
-//
-//                         # Download and install Helm
-//                         curl -LO https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz
-//                         tar -zxvf helm-v3.9.0-linux-amd64.tar.gz
-//                         mv linux-amd64/helm /usr/local/bin/
-//                         chmod +x /usr/local/bin/helm
-//                         '''
-//                     }
-//                 }
-//             }
-//         }
+        stage('Setup Tools') {
+            steps {
+                script {
+                    echo "Installing required tools in the 'install-tools' container"
+                    container('install-tools') {
+                        sh '''
+                        set -e  # Stop on any error
+                        # Update and install essential packages
+                        apt-get update
+                        apt-get install -y unzip curl git
 
-//         stage('Configure kubectl') {
-//             steps {
-//                 container('install-tools') {
-//                     script {
-//                         echo "Configuring kubectl to use EKS cluster"
-//                         sh '''
-//                         aws eks --region ${aws_region} update-kubeconfig --name ${cluster_name}
-//                         '''
-//                     }
-//                 }
-//             }
-//         }
+                        # Download and install AWS CLI
+                        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                        unzip awscliv2.zip
+                        ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
+
+                        # Download and install kubectl
+                        curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+                        chmod +x kubectl
+                        mv kubectl /usr/local/bin/
+
+                        # Download and install Helm
+                        curl -LO https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz
+                        tar -zxvf helm-v3.9.0-linux-amd64.tar.gz
+                        mv linux-amd64/helm /usr/local/bin/
+                        chmod +x /usr/local/bin/helm
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Configure kubectl') {
+            steps {
+                container('install-tools') {
+                    script {
+                        echo "Configuring kubectl to use EKS cluster"
+                        sh '''
+                        aws eks --region ${aws_region} update-kubeconfig --name ${cluster_name}
+                        '''
+                    }
+                }
+            }
+        }
 
 
         stage('Deploy to Kubernetes') {
             steps {
+                container('install-tools') {
                     script {
                         echo "Ensuring cleanup of old resources in ${namespace} namespace"
                         sh '''
+
                         helm upgrade --install nginx-static-release ${localHelmPath} --namespace ${namespace}
+                        # -- helm upgrade --install python-app-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_p}
                         '''
                     }
-
+                }
             }
         }
 
