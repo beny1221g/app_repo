@@ -1,0 +1,16 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  # This ClusterRole allows Jenkins to manage ClusterRoles and other cluster-wide resources
+  # Define the necessary permissions for cluster-scoped resources
+  # You may adjust this to include other necessary permissions based on your needs
+  # such as managing ClusterRoleBindings or other cluster-wide resources
+  # like services, deployments, etc.
+  name: jenkins-cluster-role
+rules:
+  - apiGroups: [""]
+    resources: ["services", "pods", "configmaps", "secrets", "namespaces"]
+    verbs: ["get", "list", "create", "delete", "update"]
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["clusterroles", "clusterrolebindings"]
+    verbs: ["get", "list", "create", "delete", "update"]

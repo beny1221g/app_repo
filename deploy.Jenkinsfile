@@ -105,6 +105,9 @@ pipeline {
                     script {
                         echo "Applying ClusterRole and ClusterRoleBinding..."
                         sh '''
+                        kubectl apply -f jenkins-cluster-role.yaml
+                        kubectl apply -f jenkins-cluster-role-binding.yaml
+
                         # Apply ClusterRole and ClusterRoleBinding to allow Jenkins service account to manage clusterrolebindings
                         kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/clusterrole-manager.yaml
                         kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/clusterrole-manager-binding.yaml
