@@ -8,13 +8,6 @@ pipeline {
               name: jenkins-agent
               namespace: bz-jenkins
             spec:
-              initContainers:
-                - name: init-permissions
-                  image: busybox
-                  command: ['sh', '-c', 'chmod -R 777 /home/jenkins/agent']
-                  volumeMounts:
-                    - name: jenkins-home
-                      mountPath: /home/jenkins/agent
               containers:
                 - name: jenkins-agent
                   image: beny14/dockerfile_agent:latest
@@ -32,23 +25,9 @@ pipeline {
                     - -workDir
                     - /home/jenkins/agent
                   tty: true
-                  securityContext:
-                    runAsUser: 1000
-                    fsGroup: 1000
-                - name: install-tools
-                  image: ubuntu:20.04
-                  command: ['sleep', 'infinity']
-                  tty: true
-              volumes:
-                - name: jenkins-home
-                  emptyDir: {}
               restartPolicy: Never
             '''
         }
-    }
-
-    options {
-        timeout(time: 5, unit: 'MINUTES')  // Sets a timeout for the entire pipeline
     }
 
     environment {
@@ -79,61 +58,23 @@ pipeline {
             }
         }
 
-        stage('Download Deployment Files') {
-            steps {
-                container('install-tools') {
-                    script {
-                        echo "Checking if the directory exists and cleaning it up..."
-                        sh '''
-                            # Remove the existing directory if it exists
-                            rm -rf /home/jenkins/agent/workspace/app_deploy/k8s
-                            # Create a fresh subdirectory to clone the repo into
-                            mkdir -p /home/jenkins/agent/workspace/app_deploy/k8s
-                            # Clone the repository into the subdirectory
-                            git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/k8s
-                            echo "Listing the directory structure of /home/jenkins/agent/workspace/app_deploy/k8s"
-                            ls -R /home/jenkins/agent/workspace/app_deploy/k8s  # List all files and directories to verify the structure
-                        '''
-                    }
-                }
-            }
-        }
-
         stage('Deploy to Kubernetes') {
             steps {
                 container('install-tools') {
                     script {
-                        echo "Applying ClusterRole and ClusterRoleBinding..."
+                        echo "Deploying NGINX image to Kubernetes"
                         sh '''
-                        # Apply ClusterRole and ClusterRoleBinding to allow Jenkins service account to manage clusterrolebindings
-                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/clusterrole-manager.yaml
-                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/clusterrole-manager-binding.yaml
+                        # Apply the Deployment
+                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment.yaml --namespace=${namespace}
 
-                        # Apply other necessary YAML files
-                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/hpa-ingress-role.yaml --namespace bz-appy
-                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/hpa-ingress-rolebinding.yaml --namespace bz-appy
+                        # Apply the Service
+                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-service.yaml --namespace=${namespace}
 
-                        # Check if the deployment exists before deleting
-                        kubectl get deployment nginx-deployment --namespace bz-appy || echo "Deployment nginx-deployment not found"
-                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment.yaml --namespace bz-appy || echo "nginx-deployment not deleted"
-
-                        # Check if the HPA exists before deleting
-                        kubectl get hpa nginx-hpa --namespace bz-appy || echo "HPA nginx-hpa not found"
-                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-hpa.yaml --namespace bz-appy || echo "nginx-hpa not deleted"
-
-                        # Check if the ingress exists before deleting
-                        kubectl get ingress nginx-ingress --namespace bz-appy || echo "Ingress nginx-ingress not found"
-                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-ingress.yaml --namespace bz-appy || echo "nginx-ingress not deleted"
-
-                        # Check if the service exists before deleting
-                        kubectl get service nginx-service --namespace bz-appy || echo "Service nginx-service not found"
-                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-service.yaml --namespace bz-appy || echo "nginx-service not deleted"
-
-                        # Now apply the YAML files
-                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment.yaml --namespace bz-appy
+                        # Apply the Ingress (optional)
+                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-ingress.yaml --namespace=${namespace}
 
                         # Wait for the deployment to complete
-                        kubectl rollout status deployment/nginx-deployment --namespace bz-appy
+                        kubectl rollout status deployment/nginx-deployment --namespace=${namespace}
                         '''
                     }
                 }

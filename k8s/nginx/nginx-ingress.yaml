@@ -5,13 +5,13 @@ metadata:
   namespace: bz-appy
 spec:
   rules:
-    - host: nginx.local  # Replace with your domain
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: nginx-service
-                port:
-                  number: 80
+  - host: nginx.local  # Your domain or subdomain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-service
+            port:
+              number: 80
