@@ -1,13 +1,13 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: jenkins-access-binding
-  namespace: bz-appy
+  name: hpa-manager-binding
+  namespace: bz-appy  # Ensure the binding is applied in the right namespace
 subjects:
-- kind: ServiceAccount
-  name: default  # Ensure this matches your Jenkins service account
-  namespace: bz-jenkins  # Ensure this is the namespace where Jenkins is running
+  - kind: ServiceAccount
+    name: default  # Replace with your Jenkins service account name if different
+    namespace: bz-jenkins  # Ensure this is the correct namespace for your Jenkins service account
 roleRef:
   kind: Role
-  name: jenkins-access
+  name: hpa-manager
   apiGroup: rbac.authorization.k8s.io
