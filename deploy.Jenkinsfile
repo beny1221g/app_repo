@@ -29,7 +29,7 @@ pipeline {
                   image: ubuntu:latest
                   command:
                     - sleep
-                    - "3600"
+                    - "10"
                   tty: true
                   volumeMounts:
                     - name: kube-config
