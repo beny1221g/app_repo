@@ -107,16 +107,25 @@ stage('Deploy to Kubernetes') {
             script {
                 echo "Applying Kubernetes YAML files for NGINX deployment"
                 sh '''
-                    # Correct paths for NGINX YAML files in the cloned repo
-                    kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment.yaml --namespace bz-appy
-                    kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-hpa.yaml --namespace bz-appy
-                    kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-ingress.yaml --namespace bz-appy
-                    kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-service.yaml --namespace bz-appy
+                # Check if the deployment exists before deleting
+                kubectl get deployment nginx-deployment --namespace bz-appy || echo "Deployment nginx-deployment not found"
+                kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment.yaml --namespace bz-appy || echo "nginx-deployment not deleted"
 
-                    kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment.yaml --namespace bz-appy
-                    kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-hpa.yaml --namespace bz-appy
-                    kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-ingress.yaml --namespace bz-appy
-                    kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-service.yaml --namespace bz-appy
+                # Check if the HPA exists before deleting
+                kubectl get hpa nginx-hpa --namespace bz-appy || echo "HPA nginx-hpa not found"
+                kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-hpa.yaml --namespace bz-appy || echo "nginx-hpa not deleted"
+
+                # Check if the ingress exists before deleting
+                kubectl get ingress nginx-ingress --namespace bz-appy || echo "Ingress nginx-ingress not found"
+                kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-ingress.yaml --namespace bz-appy || echo "nginx-ingress not deleted"
+
+                # Check if the service exists before deleting
+                kubectl get service nginx-service --namespace bz-appy || echo "Service nginx-service not found"
+                kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-service.yaml --namespace bz-appy || echo "nginx-service not deleted"
+
+                # Now apply the YAML files
+                kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment.yaml --namespace bz-appy
+
                 '''
             }
         }
