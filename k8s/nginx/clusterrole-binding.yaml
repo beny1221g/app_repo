@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default-serviceaccount-clusterrole-binding
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: bz-jenkins
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin  # or a specific role with required permissions
+  apiGroup: rbac.authorization.k8s.io
