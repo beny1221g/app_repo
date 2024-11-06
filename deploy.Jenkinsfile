@@ -129,30 +129,45 @@ pipeline {
             }
         }
 
-       stage('Deploy to Kubernetes') {
-        steps {
-        container('install-tools') {
-            script {
-                echo "Ensuring cleanup of old resources in ${namespace} namespace"
-                sh '''
-                # Check and delete old resources
-                kubectl get hpa -n ${namespace} && kubectl delete hpa -n ${namespace} --all || echo "No HPA resources to delete"
-                kubectl get deployment -n ${namespace} && kubectl delete deployment -n ${namespace} --all || echo "No deployments to delete"
-                kubectl get service -n ${namespace} && kubectl delete service -n ${namespace} --all || echo "No services to delete"
-                kubectl get pvc -n ${namespace} && kubectl delete pvc -n ${namespace} --all || echo "No PVCs to delete"
-                '''
-
-                echo "Installing/Upgrading Helm release"
-                sh '''
-                # Use a valid release name (e.g., 'nginx-static-release')
-                helm upgrade --install nginx-static-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_n} --set replicas=1 --set hpa.enabled=true
-                helm upgrade --install python-app-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_p}
-                '''
+        stage('Ensure Permissions for Resources') {
+            steps {
+                container('install-tools') {
+                    script {
+                        echo "Ensuring permissions to manage resources in ${namespace} namespace"
+                        sh '''
+                        kubectl auth can-i delete hpa --namespace ${namespace}
+                        kubectl auth can-i delete deployment --namespace ${namespace}
+                        kubectl auth can-i delete service --namespace ${namespace}
+                        kubectl auth can-i delete pvc --namespace ${namespace}
+                        '''
+                    }
+                }
             }
         }
-    }
-}
 
+        stage('Deploy to Kubernetes') {
+            steps {
+                container('install-tools') {
+                    script {
+                        echo "Ensuring cleanup of old resources in ${namespace} namespace"
+                        sh '''
+                        # Check and delete old resources
+                        kubectl get hpa -n ${namespace} && kubectl delete hpa -n ${namespace} --all || echo "No HPA resources to delete"
+                        kubectl get deployment -n ${namespace} && kubectl delete deployment -n ${namespace} --all || echo "No deployments to delete"
+                        kubectl get service -n ${namespace} && kubectl delete service -n ${namespace} --all || echo "No services to delete"
+                        kubectl get pvc -n ${namespace} && kubectl delete pvc -n ${namespace} --all || echo "No PVCs to delete"
+                        '''
+
+                        echo "Installing/Upgrading Helm release"
+                        sh '''
+                        # Use a valid release name (e.g., 'nginx-static-release')
+                        helm upgrade --install nginx-static-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_n} --set replicas=1 --set hpa.enabled=true --create-namespace
+                        helm upgrade --install python-app-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_p} --create-namespace
+                        '''
+                    }
+                }
+            }
+        }
 
         stage('Notify Deployment') {
             steps {
