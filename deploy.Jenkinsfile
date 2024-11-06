@@ -52,32 +52,29 @@ pipeline {
 //             }
 //         }
 
-        stage('Configure kubectl') {
-            steps {
-                container('install-tools') {
-                    script {
-                        echo "Configuring kubectl to use EKS cluster"
-                        sh '''
-                        aws eks --region ${aws_region} update-kubeconfig --name ${cluster_name}
-                        '''
-                    }
-                }
-            }
-        }
+//         stage('Configure kubectl') {
+//             steps {
+//                 container('install-tools') {
+//                     script {
+//                         echo "Configuring kubectl to use EKS cluster"
+//                         sh '''
+//                         aws eks --region ${aws_region} update-kubeconfig --name ${cluster_name}
+//                         '''
+//                     }
+//                 }
+//             }
+//         }
 
 
         stage('Deploy to Kubernetes') {
             steps {
-                container('install-tools') {
                     script {
                         echo "Ensuring cleanup of old resources in ${namespace} namespace"
                         sh '''
-
                         helm upgrade --install nginx-static-release ${localHelmPath} --namespace ${namespace}
-                        # -- helm upgrade --install python-app-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_p}
                         '''
                     }
-                }
+
             }
         }
 
