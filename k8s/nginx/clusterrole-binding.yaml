@@ -3,10 +3,10 @@ kind: ClusterRoleBinding
 metadata:
   name: default-serviceaccount-clusterrole-binding
 subjects:
-  - kind: ServiceAccount
-    name: default
-    namespace: bz-jenkins
+- kind: ServiceAccount
+  name: default
+  namespace: bz-jenkins
 roleRef:
   kind: ClusterRole
-  name: cluster-admin  # or a specific role with required permissions
+  name: clusterrolebinding-manager
   apiGroup: rbac.authorization.k8s.io

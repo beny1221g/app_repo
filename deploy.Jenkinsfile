@@ -106,8 +106,11 @@ stage('Deploy to Kubernetes') {
             script {
                 echo "Applying Kubernetes YAML files for NGINX deployment"
                 sh '''
-                # Apply the required permissions first
+                # Apply ClusterRole and ClusterRoleBinding to allow Jenkins service account to manage clusterrolebindings
+                kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/clusterrole.yaml
                 kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/clusterrole-binding.yaml
+
+                # Apply other necessary YAML files
                 kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/hpa-ingress-role.yaml --namespace bz-appy
                 kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/hpa-ingress-rolebinding.yaml --namespace bz-appy
 
@@ -137,7 +140,6 @@ stage('Deploy to Kubernetes') {
         }
     }
 }
-
 
 
 
