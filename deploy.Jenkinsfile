@@ -25,19 +25,6 @@ pipeline {
                     - -workDir
                     - /home/jenkins/agent
                   tty: true
-                - name: install-tools
-                  image: ubuntu:latest
-                  command:
-                    - sleep
-                    - "10"
-                  tty: true
-                  volumeMounts:
-                    - name: kube-config
-                      mountPath: /root/.kube
-              volumes:
-                - name: kube-config
-                  configMap:
-                    name: kubeconfig
               restartPolicy: Never
             '''
         }
@@ -54,19 +41,14 @@ pipeline {
     stages {
         stage('Setup Tools') {
             steps {
-                container('install-tools') {
-                    script {
-                        echo "Installing AWS CLI, kubectl, and dependencies..."
+                script {
+                    container('install-tools') {
                         sh '''
                         apt-get update
                         apt-get install -y unzip curl git
-
-                        # Install AWS CLI v2
                         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
                         unzip awscliv2.zip
                         ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
-
-                        # Install kubectl
                         curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
                         chmod +x kubectl
                         mv kubectl /usr/local/bin/
