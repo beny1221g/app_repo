@@ -21,7 +21,7 @@ appName: nginx  # Name of the application
 # Container configuration
 container:
   name: nginx  # Container name
-  port: 80  # Port the container listens on
+  port: 4000  # Port the container listens on
 
 # Image configuration
 image:
