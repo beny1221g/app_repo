@@ -13,3 +13,15 @@ rules:
   - apiGroups: [""]
     resources: ["services", "persistentvolumeclaims"]
     verbs: ["get", "list", "delete"]
+
+---
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: bz-appy
+  name: secrets-access
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]

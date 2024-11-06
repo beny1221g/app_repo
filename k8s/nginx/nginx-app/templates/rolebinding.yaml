@@ -1,13 +1,13 @@
-apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: jenkins-access-binding
+  name: secrets-access-binding
   namespace: bz-appy
 subjects:
 - kind: ServiceAccount
-  name: default  # Ensure this matches your Jenkins service account
-  namespace: bz-jenkins  # Ensure this is the namespace where Jenkins is running
+  name: bz-jenkins-service-account  # Your service account name
+  namespace: bz-jenkins
 roleRef:
   kind: Role
-  name: jenkins-access
+  name: secrets-access
   apiGroup: rbac.authorization.k8s.io
