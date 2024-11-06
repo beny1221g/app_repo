@@ -101,28 +101,28 @@ stage('Download Deployment Files') {
 
 
 
-        stage('Deploy to Kubernetes') {
-            steps {
-                container('install-tools') {
-                    script {
-                        echo "Applying Kubernetes YAML files for NGINX deployment"
-                        sh '''
-                        # Clean up old resources
-                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-deployment.yaml --namespace ${namespace} || true
-                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-hpa.yaml --namespace ${namespace} || true
-                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-ingress.yaml --namespace ${namespace} || true
-                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-service.yaml --namespace ${namespace} || true
+stage('Deploy to Kubernetes') {
+    steps {
+        container('install-tools') {
+            script {
+                echo "Applying Kubernetes YAML files for NGINX deployment"
+                sh '''
+                    # Correct paths for NGINX YAML files in the cloned repo
+                    kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment/nginx-deployment.yaml --namespace bz-appy || true
+                    kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment/nginx-hpa.yaml --namespace bz-appy || true
+                    kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment/nginx-ingress.yaml --namespace bz-appy || true
+                    kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment/nginx-service.yaml --namespace bz-appy || true
 
-                        # Apply new configurations
-                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-deployment.yaml --namespace ${namespace}
-                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-hpa.yaml --namespace ${namespace}
-                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-ingress.yaml --namespace ${namespace}
-                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/nginx-deployment/nginx-service.yaml --namespace ${namespace}
-                        '''
-                    }
-                }
+                    kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment/nginx-deployment.yaml --namespace bz-appy
+                    kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment/nginx-hpa.yaml --namespace bz-appy
+                    kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment/nginx-ingress.yaml --namespace bz-appy
+                    kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment/nginx-service.yaml --namespace bz-appy
+                '''
             }
         }
+    }
+}
+
 
         stage('Notify Deployment') {
             steps {
