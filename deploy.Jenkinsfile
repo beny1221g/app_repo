@@ -119,7 +119,7 @@ pipeline {
                         echo "Ensuring cleanup of old resources in ${namespace} namespace"
                         sh '''
 
-                        helm upgrade --install nginx-static-release ${localHelmPath} --namespace ${namespace}  --set hpa.enabled=true
+                        helm upgrade --install nginx-static-release ${localHelmPath} --namespace ${namespace}
                         # -- helm upgrade --install python-app-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_p}
                         '''
                     }
