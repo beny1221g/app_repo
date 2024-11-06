@@ -128,11 +128,15 @@ stage('Deploy to Kubernetes') {
 
                 # Now apply the YAML files
                 kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment.yaml --namespace bz-appy
+
+                # Wait for the deployment to complete
+                kubectl rollout status deployment/nginx-deployment --namespace bz-appy
                 '''
             }
         }
     }
 }
+
 
 
         stage('Notify Deployment') {
