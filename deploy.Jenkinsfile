@@ -79,23 +79,26 @@ pipeline {
             }
         }
 
-        stage('Download Deployment Files') {
+stage('Download Deployment Files') {
     steps {
         container('install-tools') {
             script {
-                echo "Cloning GitHub repository into /home/jenkins/agent/workspace/app_deploy/k8s"
+                echo "Checking if the directory exists and cleaning it up..."
                 sh '''
-                    # Create a subdirectory to clone the repo into
+                    # Remove the existing directory if it exists
+                    rm -rf /home/jenkins/agent/workspace/app_deploy/k8s
+                    # Create a fresh subdirectory to clone the repo into
                     mkdir -p /home/jenkins/agent/workspace/app_deploy/k8s
                     # Clone the repository into the subdirectory
                     git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/k8s
                     echo "Listing the directory structure of /home/jenkins/agent/workspace/app_deploy/k8s"
-                    ls -R /home/jenkins/agent/workspace/app_deploy/k8s  # List all files and directories
+                    ls -R /home/jenkins/agent/workspace/app_deploy/k8s  # List all files and directories to verify the structure
                 '''
             }
         }
     }
 }
+
 
 
         stage('Deploy to Kubernetes') {
