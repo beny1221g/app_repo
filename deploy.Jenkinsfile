@@ -52,114 +52,75 @@ pipeline {
     }
 
     environment {
-        aws_region = "us-east-2"  // AWS region for EKS and SNS
-        ecr_registry = "023196572641.dkr.ecr.us-east-2.amazonaws.com"  // AWS ECR registry URL
-        ecr_repo = "${ecr_registry}/beny14/aws_repo"  // ECR repository path
-        image_tag_p = "python_app:${BUILD_NUMBER}"  // Tag for Python application image
-        image_tag_n = "nginx_static:${BUILD_NUMBER}"  // Tag for NGINX static content image
-        cluster_name = "eks-X10-prod-01"  // EKS cluster name
-        kubeconfig_path = "/root/.kube/config"  // Path to kubeconfig file in the container
-        namespace = "bz-appy"  // Kubernetes namespace for deployment
-        sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:deploy_bz"  // SNS topic for notifications
-        git_repo_url = "https://github.com/beny1221g/k8s.git"  // Git repository URL for Helm charts
-        localHelmPath = "${WORKSPACE}/nginx-chart/k8s/nginx/nginx-app"  // Path to Helm chart package
+        aws_region = "us-east-2"
+        sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:deploy_bz"
+        git_repo_url = "https://github.com/beny1221g/k8s.git"
+        kubeconfig_path = "/root/.kube/config"
+        namespace = "bz-appy"
     }
 
     stages {
         stage('Setup Tools') {
             steps {
                 script {
-                    echo "Installing required tools in the 'install-tools' container"
                     container('install-tools') {
                         sh '''
-                        set -e  # Stop on any error
-                        # Update and install essential packages
                         apt-get update
                         apt-get install -y unzip curl git
-
-                        # Download and install AWS CLI
                         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
                         unzip awscliv2.zip
                         ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
-
-                        # Download and install kubectl
                         curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
                         chmod +x kubectl
                         mv kubectl /usr/local/bin/
-
-                        # Download and install Helm
-                        curl -LO https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz
-                        tar -zxvf helm-v3.9.0-linux-amd64.tar.gz
-                        mv linux-amd64/helm /usr/local/bin/
-                        chmod +x /usr/local/bin/helm
                         '''
                     }
                 }
             }
         }
 
-        stage('Generate Helm Chart Directory') {
+        stage('Download Deployment Files') {
             steps {
                 container('install-tools') {
                     script {
-                        echo "Setting up directory structure for Helm chart"
+                        echo "Cloning GitHub repository"
                         sh '''
-                            # Create the Helm chart directory
-                            mkdir -p ${WORKSPACE}/nginx-chart
-                            ls -l ${WORKSPACE}/nginx-chart  # List contents to verify
+                            git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/nginx-deployment
+                            ls -R /home/jenkins/agent/workspace/app_deploy/nginx-deployment
                         '''
                     }
                 }
             }
         }
 
-        stage('Download Helm Chart') {
+        stage('Deploy to Kubernetes') {
             steps {
                 container('install-tools') {
                     script {
-                        echo "Cloning Helm chart repository"
+                        echo "Applying Kubernetes YAML files for NGINX deployment"
                         sh '''
-                            # Clone the repository to the Jenkins workspace
-                            git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/nginx-chart
-                            # Check the structure of the cloned directory
-                            ls -R /home/jenkins/agent/workspace/app_deploy/nginx-chart
+                        # Clean up old resources
+                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-deployment.yaml --namespace ${namespace} || true
+                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-hpa.yaml --namespace ${namespace} || true
+                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-ingress.yaml --namespace ${namespace} || true
+                        kubectl delete -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-service.yaml --namespace ${namespace} || true
+
+                        # Apply new configurations
+                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-deployment.yaml --namespace ${namespace}
+                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-hpa.yaml --namespace ${namespace}
+                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-ingress.yaml --namespace ${namespace}
+                        kubectl apply -f /home/jenkins/agent/workspace/app_deploy/nginx-deployment/nginx-service.yaml --namespace ${namespace}
                         '''
                     }
                 }
             }
         }
-
-       stage('Deploy to Kubernetes') {
-        steps {
-        container('install-tools') {
-            script {
-                echo "Ensuring cleanup of old resources in ${namespace} namespace"
-                sh '''
-                # Check and delete old resources
-                kubectl get hpa -n ${namespace} && kubectl delete hpa -n ${namespace} --all || echo "No HPA resources to delete"
-                kubectl get deployment -n ${namespace} && kubectl delete deployment -n ${namespace} --all || echo "No deployments to delete"
-                kubectl get service -n ${namespace} && kubectl delete service -n ${namespace} --all || echo "No services to delete"
-                kubectl get pvc -n ${namespace} && kubectl delete pvc -n ${namespace} --all || echo "No PVCs to delete"
-                '''
-
-                echo "Installing/Upgrading Helm release"
-                sh '''
-                # Use a valid release name (e.g., 'nginx-static-release')
-                helm upgrade --install nginx-static-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_n} --set replicas=1 --set hpa.enabled=true
-                helm upgrade --install python-app-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_p}
-                '''
-            }
-        }
-    }
-}
-
 
         stage('Notify Deployment') {
             steps {
                 script {
-                    echo "Sending deployment notification"
                     sh '''
-                    aws sns publish --topic-arn ${sns_topic_arn} --message "Deployment of ${image_tag_n} and ${image_tag_p} completed successfully."
+                    aws sns publish --topic-arn ${sns_topic_arn} --message "Deployment of NGINX application completed successfully."
                     '''
                 }
             }
@@ -169,7 +130,6 @@ pipeline {
     post {
         always {
             echo "Cleaning up resources..."
-            // Cleanup code here, if necessary
         }
         success {
             echo "Pipeline completed successfully."
