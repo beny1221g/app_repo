@@ -5,8 +5,8 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: default
-    namespace: bz-jenkins  # The namespace where the Jenkins service account is located
+    namespace: bz-jenkins  # Ensure this is the correct namespace for the Jenkins service account
 roleRef:
   kind: ClusterRole
-  name: hpa-manager  # The ClusterRole that grants the necessary permissions
+  name: hpa-manager  # Ensure that this ClusterRole exists
   apiGroup: rbac.authorization.k8s.io
