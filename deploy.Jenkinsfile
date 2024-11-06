@@ -98,31 +98,13 @@ pipeline {
             }
         }
 
-        stage('Generate Helm Chart Directory') {
+        stage('Configure kubectl') {
             steps {
                 container('install-tools') {
                     script {
-                        echo "Setting up directory structure for Helm chart"
+                        echo "Configuring kubectl to use EKS cluster"
                         sh '''
-                            # Create the Helm chart directory
-                            mkdir -p ${WORKSPACE}/nginx-chart
-                            ls -l ${WORKSPACE}/nginx-chart  # List contents to verify
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Download Helm Chart') {
-            steps {
-                container('install-tools') {
-                    script {
-                        echo "Cloning Helm chart repository"
-                        sh '''
-                            # Clone the repository to the Jenkins workspace
-                            git clone ${git_repo_url} /home/jenkins/agent/workspace/app_deploy/nginx-chart
-                            # Check the structure of the cloned directory
-                            ls -R /home/jenkins/agent/workspace/app_deploy/nginx-chart
+                        aws eks --region ${aws_region} update-kubeconfig --name ${cluster_name}
                         '''
                     }
                 }
