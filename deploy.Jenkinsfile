@@ -100,13 +100,16 @@ stage('Download Deployment Files') {
 }
 
 
-
 stage('Deploy to Kubernetes') {
     steps {
         container('install-tools') {
             script {
                 echo "Applying Kubernetes YAML files for NGINX deployment"
                 sh '''
+                # Apply the required permissions first
+                kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/hpa-ingress-role.yaml --namespace bz-appy
+                kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/hpa-ingress-rolebinding.yaml --namespace bz-appy
+
                 # Check if the deployment exists before deleting
                 kubectl get deployment nginx-deployment --namespace bz-appy || echo "Deployment nginx-deployment not found"
                 kubectl delete -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment.yaml --namespace bz-appy || echo "nginx-deployment not deleted"
@@ -125,7 +128,6 @@ stage('Deploy to Kubernetes') {
 
                 # Now apply the YAML files
                 kubectl apply -f /home/jenkins/agent/workspace/app_deploy/k8s/k8s/nginx/nginx-deployment.yaml --namespace bz-appy
-
                 '''
             }
         }

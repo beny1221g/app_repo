@@ -1,0 +1,15 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: bz-appy
+  name: hpa-ingress-manager
+rules:
+  - apiGroups: [""]
+    resources: ["services", "pods", "pods/exec", "namespaces"]
+    verbs: ["get", "list", "create", "delete"]
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list", "delete"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "delete"]
