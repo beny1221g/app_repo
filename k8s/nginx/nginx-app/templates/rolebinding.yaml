@@ -1,13 +1,22 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRole
 metadata:
-  name: hpa-manager-binding
-  namespace: bz-appy  # Ensure the binding is applied in the right namespace
+  name: impersonate-serviceaccount
+rules:
+  - apiGroups: [""]
+    resources: ["serviceaccounts"]
+    verbs: ["impersonate"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: impersonate-serviceaccount-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: impersonate-serviceaccount
 subjects:
   - kind: ServiceAccount
-    name: default  # Replace with your Jenkins service account name if different
-    namespace: bz-jenkins  # Ensure this is the correct namespace for your Jenkins service account
-roleRef:
-  kind: Role
-  name: hpa-manager
-  apiGroup: rbac.authorization.k8s.io
+    name: default  # Jenkins service account
+    namespace: bz-jenkins
