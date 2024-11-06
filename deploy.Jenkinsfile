@@ -111,21 +111,6 @@ pipeline {
             }
         }
 
-        stage('Ensure Permissions for Resources') {
-            steps {
-                container('install-tools') {
-                    script {
-                        echo "Ensuring permissions to manage resources in ${namespace} namespace"
-                        sh '''
-                        kubectl auth can-i delete hpa --namespace ${namespace} --as=system:serviceaccount:bz-jenkins:default || exit 1
-                        kubectl auth can-i delete deployment --namespace ${namespace} --as=system:serviceaccount:bz-jenkins:default || exit 1
-                        kubectl auth can-i delete service --namespace ${namespace} --as=system:serviceaccount:bz-jenkins:default || exit 1
-                        kubectl auth can-i delete pvc --namespace ${namespace} --as=system:serviceaccount:bz-jenkins:default || exit 1
-                        '''
-                    }
-                }
-            }
-        }
 
         stage('Deploy to Kubernetes') {
             steps {
@@ -133,19 +118,7 @@ pipeline {
                     script {
                         echo "Ensuring cleanup of old resources in ${namespace} namespace"
                         sh '''
-                        # Delete old resources using Helm if they exist
-                        helm delete nginx-static-release --namespace ${namespace} || echo "No nginx-static-release to delete"
-                        # -- helm delete python-app-release --namespace ${namespace} || echo "No python-app-release to delete"
 
-                        # Optionally, remove leftover resources directly using kubectl
-                        kubectl get hpa -n ${namespace} && kubectl delete hpa -n ${namespace} --all || echo "No HPA resources to delete"
-                        kubectl get deployment -n ${namespace} && kubectl delete deployment -n ${namespace} --all || echo "No deployments to delete"
-                        kubectl get service -n ${namespace} && kubectl delete service -n ${namespace} --all || echo "No services to delete"
-                        kubectl get pvc -n ${namespace} && kubectl delete pvc -n ${namespace} --all || echo "No PVCs to delete"
-                        '''
-                        echo "Installing/Upgrading Helm releases"
-                        sh '''
-                        # Install or upgrade Helm releases (NGINX and Python app)
                         helm upgrade --install nginx-static-release ${localHelmPath} --namespace ${namespace}  --set hpa.enabled=true
                         # -- helm upgrade --install python-app-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_p}
                         '''
