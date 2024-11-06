@@ -19,7 +19,7 @@ pipeline {
         localHelmPath = "${WORKSPACE}/nginx-chart/k8s/nginx/nginx-app"  // Path to Helm chart package
     }
 
-//     stages {
+    stages {
 //         stage('Setup Tools') {
 //             steps {
 //                 script {
