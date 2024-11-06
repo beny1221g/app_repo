@@ -29,7 +29,7 @@ pipeline {
                   image: ubuntu:latest
                   command:
                     - sleep
-                    - "3600"  // Keeps the container running for interaction
+                    - "3600"
                   tty: true
                   volumeMounts:
                     - name: kube-config
