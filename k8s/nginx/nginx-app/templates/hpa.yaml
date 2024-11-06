@@ -22,15 +22,36 @@ spec:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: hpa-manager
   namespace: bz-appy
+  name: hpa-manager
 rules:
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["get", "list"]
+    verbs: ["get", "list"]  # Grant access to secrets
   - apiGroups: ["apps", "extensions"]
     resources: ["deployments"]
     verbs: ["get", "list", "delete"]
   - apiGroups: ["autoscaling"]
     resources: ["horizontalpodautoscalers"]
     verbs: ["get", "list", "delete"]
+  - apiGroups: [""]
+    resources: ["services", "persistentvolumeclaims"]
+    verbs: ["get", "list", "delete"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hpa-manager-binding
+  namespace: bz-appy
+subjects:
+  - kind: ServiceAccount
+    name: default  # Or specify your Jenkins service account name if different
+    namespace: bz-jenkins
+roleRef:
+  kind: Role
+  name: hpa-manager  # Ensure this matches the Role name in the bz-appy namespace
+  apiGroup: rbac.authorization.k8s.io
+
+
