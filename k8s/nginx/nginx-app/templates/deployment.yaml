@@ -34,12 +34,3 @@ spec:
             claimName: {{ .Values.pvc.name }}
 
 
----
-
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: jenkins-agent-sa
-  namespace: bz-jenkins
-  annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::023196572641:role/bz-role
