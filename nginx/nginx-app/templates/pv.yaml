@@ -11,4 +11,4 @@ spec:
     - ReadWriteOnce
   storageClassName: standard
   hostPath:
-    path: /home/bz/Desktop/kube_repo/k8s/nginx/nginx-chart/templates/pvc.yaml
+    path: /home/tmp/jenkins/k8s/nginx/nginx-app/templates/pvc.yaml

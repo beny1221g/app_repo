@@ -62,7 +62,7 @@ pipeline {
                 script {
                     echo "Deploying resources using Helm"
                     sh """
-                        helm upgrade --install nginx-bz ${localHelmPath} --namespace ${namespace} --debug --kubeconfig ${kubeconfig_path}
+                        helm upgrade --install nginx-bz ${localHelmPath} --namespace ${namespace} --kubeconfig ${kubeconfig_path}
                     """
                 }
             }
