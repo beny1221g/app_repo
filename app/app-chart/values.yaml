@@ -1,15 +1,15 @@
 namespace: bz-appy
-pvc:
-  storage: 1Gi
-app:
-  service:
-    nodePort: 30001
-    type: NodePort
+nginx:
   replicas: 1
   image: beny14/python_app:latest
+
   hpa:
     minReplicas: 1
     maxReplicas: 5
     targetCPUUtilizationPercentage: 50
+
   ingress:
     host: app.local
+
+pvc:
+  storage: 1Gi
