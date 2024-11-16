@@ -5,7 +5,7 @@ metadata:
   namespace: bz-appy
 subjects:
 - kind: ServiceAccount
-  name: bz-jenkins-service-account  # Your service account name
+  name: {{ .Release.Name }}-service
   namespace: bz-jenkins
 roleRef:
   kind: Role
