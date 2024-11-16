@@ -11,4 +11,3 @@ spec:
       port: 5000
       targetPort: 5000
   type: {{ .Values.app.service.type | default "NodePort" }}
-  externalTrafficPolicy: Loca
