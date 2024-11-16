@@ -1,57 +1,24 @@
+
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ .Release.Name }}-hpa
+  name: nginx-hpa
   namespace: {{ .Values.namespace }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ .Values.deployment.name }}
-  minReplicas: {{ .Values.hpa.minReplicas }}
-  maxReplicas: {{ .Values.hpa.maxReplicas }}
+    name: nginx-deployment
+  minReplicas: {{ .Values.nginx.hpa.minReplicas }}
+  maxReplicas: {{ .Values.nginx.hpa.maxReplicas }}
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: {{ .Values.hpa.averageUtilization }}
----
+          averageUtilization: {{ .Values.nginx.hpa.targetCPUUtilizationPercentage }}
 
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  namespace: bz-appy
-  name: hpa-manager
-rules:
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["get", "list"]  # Grant access to secrets
-  - apiGroups: ["apps", "extensions"]
-    resources: ["deployments"]
-    verbs: ["get", "list", "delete"]
-  - apiGroups: ["autoscaling"]
-    resources: ["horizontalpodautoscalers"]
-    verbs: ["get", "list", "delete"]
-  - apiGroups: [""]
-    resources: ["services", "persistentvolumeclaims"]
-    verbs: ["get", "list", "delete"]
 
----
-
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: hpa-manager-binding
-  namespace: bz-appy
-subjects:
-  - kind: ServiceAccount
-    name: default  # Or specify your Jenkins service account name if different
-    namespace: bz-jenkins
-roleRef:
-  kind: Role
-  name: hpa-manager  # Ensure this matches the Role name in the bz-appy namespace
-  apiGroup: rbac.authorization.k8s.io
 
 

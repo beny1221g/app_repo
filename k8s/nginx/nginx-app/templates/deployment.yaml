@@ -1,36 +1,28 @@
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.deployment.name }}
+  name: nginx-deployment
   namespace: {{ .Values.namespace }}
 spec:
-  replicas: {{ .Values.deployment.replicas }}
+  replicas: {{ .Values.nginx.replicas }}
   selector:
     matchLabels:
-      app: {{ .Values.appName }}
+      app: nginx
   template:
     metadata:
       labels:
-        app: {{ .Values.appName }}
+        app: nginx
     spec:
       containers:
-        - name: {{ .Values.container.name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          ports:
-            - containerPort: {{ .Values.container.port }}
-          resources:
-            requests:
-              memory: {{ .Values.resources.requests.memory }}
-              cpu: {{ .Values.resources.requests.cpu }}
-            limits:
-              memory: {{ .Values.resources.limits.memory }}
-              cpu: {{ .Values.resources.limits.cpu }}
-          volumeMounts:
-            - mountPath: {{ .Values.volume.mountPath }}
-              name: nginx-storage
+      - name: nginx
+        image: {{ .Values.nginx.image }}
+        ports:
+        - containerPort: 4000
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html
+          name: nginx-storage
       volumes:
-        - name: nginx-storage
-          persistentVolumeClaim:
-            claimName: {{ .Values.pvc.name }}
-
-
+      - name: nginx-storage
+        persistentVolumeClaim:
+          claimName: nginx-pvc

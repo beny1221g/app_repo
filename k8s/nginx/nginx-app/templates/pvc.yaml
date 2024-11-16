@@ -1,11 +1,14 @@
+
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ .Values.pvc.name }}
+  name: nginx-pvc
   namespace: {{ .Values.namespace }}
 spec:
   accessModes:
-    - {{ index .Values.pvc.accessModes 0 }}
+    - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.pvc.resources.requests.storage }}
+      storage: {{ .Values.pvc.storage }}
+  storageClassName: standard
+
