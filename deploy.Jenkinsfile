@@ -15,8 +15,8 @@ pipeline {
         kubeconfig_path = "${WORKSPACE}/.kube/config" // Update to use workspace directory
         namespace = "bz-appy"
         sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:deploy_bz"
-        git_repo_url = "https://github.com/beny1221g/k8s.git"
-        localHelmPath = "${WORKSPACE}/nginx/nginx-app"
+        localHelmPath_n = "${WORKSPACE}/nginx/nginx-app"
+        localHelmPath_p = "${WORKSPACE}/app/app-chart"
     }
 
     stages {
@@ -52,7 +52,8 @@ pipeline {
                 script {
                     echo "Deploying resources using Helm"
                     sh """
-                        helm upgrade --install nginx-bz ${localHelmPath} --namespace ${namespace} --kubeconfig ${kubeconfig_path}
+                        helm upgrade --install nginx-bz ${localHelmPath_n} --namespace ${namespace} --kubeconfig ${kubeconfig_path}
+                        helm upgrade --install app-bz ${localHelmPath_p} --namespace ${namespace} --kubeconfig ${kubeconfig_path}
                     """
                 }
             }
@@ -70,6 +71,7 @@ pipeline {
                         echo "Sending deployment notification"
                         sh """
                             aws sns publish --topic-arn ${sns_topic_arn} --message "Deployment of ${image_tag_n} and ${image_tag_p} completed successfully."
+                            aws sns publish --topic-arn ${sns_topic_arn} --message "Deployment of ${image_tag_p} and ${image_tag_p} completed successfully."
                         """
                     }
                 }
