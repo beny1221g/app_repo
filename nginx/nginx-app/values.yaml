@@ -13,4 +13,4 @@ nginx:
     host: nginx.local
 
 pvc:
-  storage: 10Gi
+  storage: 1Gi
