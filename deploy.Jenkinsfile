@@ -12,7 +12,7 @@ pipeline {
         image_tag_p = "python_app:${BUILD_NUMBER}"
         image_tag_n = "nginx_static:${BUILD_NUMBER}"
         cluster_name = "eks-X10-prod-01"
-        kubeconfig_path = "/root/.kube/config"
+        kubeconfig_path = "/home/jenkins/.kube/config" // Updated path
         namespace = "bz-appy"
         sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:deploy_bz"
         git_repo_url = "https://github.com/beny1221g/k8s.git"
@@ -29,10 +29,10 @@ pipeline {
                     credentialsId: 'aws'
                 ]]) {
                     script {
-                        // Set AWS credentials
+                        // Configure AWS without interpolating secrets in Groovy string
                         sh """
-                            aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-                            aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+                            aws configure set aws_access_key_id ${env.AWS_ACCESS_KEY_ID}
+                            aws configure set aws_secret_access_key ${env.AWS_SECRET_ACCESS_KEY}
                             aws configure set region ${aws_region}
                         """
 
