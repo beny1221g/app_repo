@@ -12,7 +12,7 @@ pipeline {
         image_tag_p = "python_app:${BUILD_NUMBER}"
         image_tag_n = "nginx_static:${BUILD_NUMBER}"
         cluster_name = "eks-X10-prod-01"
-        kubeconfig_path = "/home/jenkins/.kube/config" // Updated path
+        kubeconfig_path = "${WORKSPACE}/.kube/config" // Update to use workspace directory
         namespace = "bz-appy"
         sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:deploy_bz"
         git_repo_url = "https://github.com/beny1221g/k8s.git"
