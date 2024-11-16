@@ -71,7 +71,6 @@ pipeline {
                         echo "Sending deployment notification"
                         sh """
                             aws sns publish --topic-arn ${sns_topic_arn} --message "Deployment of ${image_tag_n} and ${image_tag_p} completed successfully."
-                            aws sns publish --topic-arn ${sns_topic_arn} --message "Deployment of ${image_tag_p} and ${image_tag_p} completed successfully."
                         """
                     }
                 }
