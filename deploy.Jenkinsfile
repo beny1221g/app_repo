@@ -20,34 +20,28 @@ pipeline {
     }
 
     stages {
-        stage('Configure kubectl') {
+         stage('AWS Configure') {
             steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                    credentialsId: 'aws'
-                ]]) {
+                withCredentials([
+                    [
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                        credentialsId: 'aws'
+                    ]
+                ]) {
                     script {
-                        echo "Configuring kubectl to use EKS cluster"
                         sh """
-                            aws eks --region ${aws_region} update-kubeconfig --name ${cluster_name} --kubeconfig ${kubeconfig_path}
+                            aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+                            aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+                            aws configure set region ${aws_region}
                         """
                     }
                 }
             }
         }
 
-        stage('Prepare Namespace') {
-            steps {
-                script {
-                    echo "Ensuring namespace ${namespace} exists"
-                    sh """
-                        kubectl get namespace ${namespace} || kubectl create namespace ${namespace}
-                    """
-                }
-            }
-        }
+
 
         stage('Deploy to Kubernetes') {
             steps {
