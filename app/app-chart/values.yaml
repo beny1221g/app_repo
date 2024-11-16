@@ -1,5 +1,4 @@
 namespace: bz-appy
-
 app:
   replicas: 1
   image: beny14/python_app:latest

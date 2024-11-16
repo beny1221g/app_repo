@@ -10,4 +10,4 @@ spec:
     - protocol: TCP
       port: 5000
       targetPort: 5000
-  type: {{ .Values.app.service.type | default "LoadBalancer" }}
+  type: {{ .Values.app.service.type | default "NodePort" }}

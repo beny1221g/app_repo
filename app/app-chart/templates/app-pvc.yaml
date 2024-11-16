@@ -11,20 +11,19 @@ spec:
       storage: {{ .Values.pvc.storage }}
   storageClassName: standard
 
+
 ---
 
-
-  apiVersion: v1
-  kind: PersistentVolume
-  metadata:
-    name: app-pv
-    namespace: { { .Values.namespace } }
-  spec:
-    capacity:
-      storage: 1Gi
-    accessModes:
-      - ReadWriteOnce
-    storageClassName: standard
-    hostPath:
-      path: /home/tmp/jenkins/app/app-py
-
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: app-pv
+  namespace: {{ .Values.namespace }}
+spec:
+  capacity:
+    storage: {{ .Values.pvc.storage }}
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  hostPath:
+    path: /home/tmp/jenkins/app/app-py
