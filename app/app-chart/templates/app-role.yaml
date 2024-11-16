@@ -1,0 +1,9 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: app-role
+rules:
+  - apiGroups: ["", "apps", "autoscaling"]
+    resources: ["pods", "services", "persistentvolumeclaims", "deployments", "horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
