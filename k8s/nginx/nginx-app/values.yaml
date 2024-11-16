@@ -1,48 +1,16 @@
-# Namespace for deployment
+
 namespace: bz-appy
+nginx:
+  replicas: 1
+  image: beny14/nginx_static:latest
 
-# PVC configuration
+  hpa:
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 50
+
+  ingress:
+    host: nginx.local
+
 pvc:
-  name: nginx-pvc
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-
-# Deployment configuration
-deployment:
-  name: nginx-deployment  # Deployment name
-  replicas: 3  # Number of replicas to be deployed
-
-# Application metadata
-appName: nginx  # Name of the application
-
-# Container configuration
-container:
-  name: nginx  # Container name
-  port: 4000  # Port the container listens on
-
-# Image configuration
-image:
-  repository: beny14/nginx_static  # Docker image repository
-  tag: latest  # Docker image tag
-
-# Resource requests and limits for the container
-resources:
-  requests:
-    memory: 64Mi  # Minimum memory request
-    cpu: 250m  # Minimum CPU request
-  limits:
-    memory: 128Mi  # Maximum memory limit
-    cpu: 500m  # Maximum CPU limit
-
-# Volume mount configuration
-volume:
-  mountPath: /var/www/html  # Path to mount the volume inside the container
-
-# Horizontal Pod Autoscaler (HPA) configuration
-hpa:
-  minReplicas: 2  # Minimum number of replicas for HPA
-  maxReplicas: 5  # Maximum number of replicas for HPA
-  averageUtilization: 50  # Target CPU utilization percentage
+  storage: 1Gi
