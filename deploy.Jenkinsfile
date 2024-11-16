@@ -119,7 +119,7 @@ pipeline {
                         echo "Ensuring cleanup of old resources in ${namespace} namespace"
                         sh '''
 
-                        helm upgrade --install nginx-static-release ${localHelmPath} --namespace ${namespace}
+                        helm upgrade --install nginx-static-release ${localHelmPath} --namespace ${namespace} --debug
 
                         '''
                     }
