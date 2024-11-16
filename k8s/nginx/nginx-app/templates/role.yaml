@@ -23,5 +23,5 @@ metadata:
   name: secrets-access
 rules:
 - apiGroups: [""]
-  resources: ["secrets"]
+  resources: ["secrets", "configmaps", "pods"]
   verbs: ["get", "list"]

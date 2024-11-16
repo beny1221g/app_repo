@@ -120,7 +120,7 @@ pipeline {
                         sh '''
 
                         helm upgrade --install nginx-static-release ${localHelmPath} --namespace ${namespace}
-                        # -- helm upgrade --install python-app-release ${localHelmPath} --namespace ${namespace} --set image.tag=${image_tag_p}
+
                         '''
                     }
                 }
