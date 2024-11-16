@@ -20,35 +20,49 @@ pipeline {
     }
 
     stages {
-         stage('AWS Configure') {
+        stage('AWS Configure') {
             steps {
-                withCredentials([
-                    [
-                        $class: 'AmazonWebServicesCredentialsBinding',
-                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                        credentialsId: 'aws'
-                    ]
-                ]) {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                    credentialsId: 'aws'
+                ]]) {
                     script {
+                        // Set AWS credentials
                         sh """
                             aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
                             aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
                             aws configure set region ${aws_region}
+                        """
+
+                        // Update kubeconfig to point to EKS cluster
+                        sh """
+                            aws eks --region ${aws_region} update-kubeconfig --name ${cluster_name} --kubeconfig ${kubeconfig_path}
                         """
                     }
                 }
             }
         }
 
-
+        stage('Check Kubernetes Connectivity') {
+            steps {
+                script {
+                    // Check if Kubernetes is reachable using kubectl
+                    echo "Checking Kubernetes cluster connectivity"
+                    sh """
+                        kubectl cluster-info --kubeconfig ${kubeconfig_path}
+                    """
+                }
+            }
+        }
 
         stage('Deploy to Kubernetes') {
             steps {
                 script {
                     echo "Deploying resources using Helm"
                     sh """
-                        helm install nginx-static ${localHelmPath} --namespace ${namespace} --debug
+                        helm install nginx-static ${localHelmPath} --namespace ${namespace} --debug --kubeconfig ${kubeconfig_path}
                     """
                 }
             }
