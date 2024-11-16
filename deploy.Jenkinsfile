@@ -16,7 +16,7 @@ pipeline {
         namespace = "bz-appy"
         sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:deploy_bz"
         git_repo_url = "https://github.com/beny1221g/k8s.git"
-        localHelmPath = "${WORKSPACE}/k8s/nginx/nginx-app"
+        localHelmPath = "${WORKSPACE}/nginx/nginx-app"
     }
 
     stages {
