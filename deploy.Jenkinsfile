@@ -21,55 +21,22 @@ pipeline {
     }
 
     stages {
-        stage('Setup Tools') {
-            steps {
-                script {
-                    echo "Installing required tools in the 'install-tools' container"
-                    container('install-tools') {
-                        sh '''
-                        set -e  # Stop on any error
-                        # Update and install essential packages
-                        apt-get update
-                        apt-get install -y unzip curl git
 
-                        # Download and install AWS CLI
-                        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                        unzip awscliv2.zip
-                        ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
-
-                        # Download and install kubectl
-                        curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
-                        chmod +x kubectl
-                        mv kubectl /usr/local/bin/
-
-                        # Download and install Helm
-                        curl -LO https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz
-                        tar -zxvf helm-v3.9.0-linux-amd64.tar.gz
-                        mv linux-amd64/helm /usr/local/bin/
-                        chmod +x /usr/local/bin/helm
-                        '''
-                    }
-                }
-            }
-        }
 
         stage('Configure kubectl') {
             steps {
-                container('install-tools') {
                     script {
                         echo "Configuring kubectl to use EKS cluster"
                         sh '''
                         aws eks --region ${aws_region} update-kubeconfig --name ${cluster_name}
                         '''
                     }
-                }
             }
         }
 
 
         stage('Deploy to Kubernetes') {
             steps {
-                container('install-tools') {
                     script {
                         echo "Ensuring cleanup of old resources in ${namespace} namespace"
                         sh '''
@@ -78,7 +45,7 @@ pipeline {
 
                         '''
                     }
-                }
+
             }
         }
 
