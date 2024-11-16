@@ -45,17 +45,7 @@ pipeline {
             }
         }
 
-        stage('Check Kubernetes Connectivity') {
-            steps {
-                script {
-                    // Check if Kubernetes is reachable using kubectl
-                    echo "Checking Kubernetes cluster connectivity"
-                    sh """
-                        kubectl cluster-info --kubeconfig ${kubeconfig_path}
-                    """
-                }
-            }
-        }
+
 
         stage('Deploy to Kubernetes') {
             steps {
