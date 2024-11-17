@@ -2,17 +2,17 @@ pipeline {
     agent { label 'ec2-fleet-bz2' }
 
     options {
-        timeout(time: 10, unit: 'MINUTES') // Increased timeout for larger deployments
+        timeout(time: 2, unit: 'MINUTES')
     }
 
     environment {
         aws_region = "us-east-2"
         ecr_registry = "023196572641.dkr.ecr.us-east-2.amazonaws.com"
         ecr_repo = "${ecr_registry}/beny14/aws_repo"
-        image_tag_n = "nginx_static:latest" // Latest tag for NGINX
-        image_tag_p = "python_app:latest"  // Latest tag for Python app
+        image_tag_n = "nginx_static:latest"
+        image_tag_p = "python_app:latest"
         cluster_name = "eks-X10-prod-01"
-        kubeconfig_path = "${WORKSPACE}/.kube/config" // Store kubeconfig in workspace
+        kubeconfig_path = "${WORKSPACE}/.kube/config"
         namespace = "bz-appy"
         sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:deploy_bz"
         localHelmPath_n = "${WORKSPACE}/nginx/nginx-app"
