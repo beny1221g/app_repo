@@ -2,17 +2,17 @@ pipeline {
     agent { label 'ec2-fleet-bz2' }
 
     options {
-        timeout(time: 5, unit: 'MINUTES') // Sets a timeout for the entire pipeline
+        timeout(time: 10, unit: 'MINUTES') // Increased timeout for larger deployments
     }
 
     environment {
         aws_region = "us-east-2"
         ecr_registry = "023196572641.dkr.ecr.us-east-2.amazonaws.com"
         ecr_repo = "${ecr_registry}/beny14/aws_repo"
-        image_tag_p = "python_app:${BUILD_NUMBER}"
-        image_tag_n = "nginx_static:${BUILD_NUMBER}"
+        image_tag_n = "nginx_static:latest" // Latest tag for NGINX
+        image_tag_p = "python_app:latest"  // Latest tag for Python app
         cluster_name = "eks-X10-prod-01"
-        kubeconfig_path = "${WORKSPACE}/.kube/config" // Update to use workspace directory
+        kubeconfig_path = "${WORKSPACE}/.kube/config" // Store kubeconfig in workspace
         namespace = "bz-appy"
         sns_topic_arn = "arn:aws:sns:us-east-2:023196572641:deploy_bz"
         localHelmPath_n = "${WORKSPACE}/nginx/nginx-app"
@@ -29,15 +29,12 @@ pipeline {
                     credentialsId: 'aws'
                 ]]) {
                     script {
-                        // Configure AWS without interpolating secrets in Groovy string
                         sh """
-                            aws configure set aws_access_key_id ${env.AWS_ACCESS_KEY_ID}
-                            aws configure set aws_secret_access_key ${env.AWS_SECRET_ACCESS_KEY}
+                            aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+                            aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
                             aws configure set region ${aws_region}
-                        """
 
-                        // Update kubeconfig to point to EKS cluster
-                        sh """
+                            # Update kubeconfig for EKS cluster
                             aws eks --region ${aws_region} update-kubeconfig --name ${cluster_name} --kubeconfig ${kubeconfig_path}
                         """
                     }
@@ -45,15 +42,20 @@ pipeline {
             }
         }
 
-
-
         stage('Deploy to Kubernetes') {
             steps {
                 script {
                     echo "Deploying resources using Helm"
                     sh """
-                        helm upgrade --install nginx-bz ${localHelmPath_n} --namespace ${namespace} --kubeconfig ${kubeconfig_path}
-                        helm upgrade --install app-bz ${localHelmPath_p} --namespace ${namespace} --kubeconfig ${kubeconfig_path}
+                        helm upgrade --install nginx-bz ${localHelmPath_n} \
+                            --namespace ${namespace} \
+                            --kubeconfig ${kubeconfig_path} \
+                            --set image.repository=${ecr_registry}/nginx_static,image.tag=latest
+
+                        helm upgrade --install app-bz ${localHelmPath_p} \
+                            --namespace ${namespace} \
+                            --kubeconfig ${kubeconfig_path} \
+                            --set image.repository=${ecr_registry}/python_app,image.tag=latest
                     """
                 }
             }
@@ -70,7 +72,9 @@ pipeline {
                     script {
                         echo "Sending deployment notification"
                         sh """
-                            aws sns publish --topic-arn ${sns_topic_arn} --message "Deployment of ${image_tag_n} and ${image_tag_p} completed successfully."
+                            aws sns publish --topic-arn ${sns_topic_arn} \
+                                --message "Deployment of ${image_tag_n} and ${image_tag_p} to Kubernetes namespace ${namespace} completed successfully." \
+                                --subject "Kubernetes Deployment Notification"
                         """
                     }
                 }
@@ -80,13 +84,14 @@ pipeline {
 
     post {
         always {
-            echo "Cleaning up resources..."
+            echo "Cleaning up temporary files..."
+            cleanWs() // Clean up workspace
         }
         success {
             echo "Pipeline completed successfully."
         }
         failure {
-            echo "Pipeline failed. Please check logs."
+            echo "Pipeline failed. Please check logs for details."
         }
     }
 }
